@@ -19,7 +19,7 @@ const Map: React.FC<MapProps> = ({ selectedRoute }) => {
   return (
     <div className="relative w-full h-full overflow-hidden">
       <Image
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-5ftmdd8GjSnchv8SKT9VsPWRxgcBtH.png"
+        src="/singapore-map.png"
         alt="Map of Central Singapore"
         layout="fill"
         objectFit="contain"
