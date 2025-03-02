@@ -6,7 +6,7 @@ import os
 
 def run_flask():
     os.chdir('backend')
-    from app import app
+    from backend.app import app
     app.run(debug=False, use_reloader=False)
 
 def run_vue():
@@ -14,10 +14,11 @@ def run_vue():
     subprocess.run(["npm", "run", "serve"], check=True)
 
 if __name__ == "__main__":
+    print("NOTE: This script will run the Flask server and Vue.js server concurrently.\nIt also takes a while, so wait patiently, you shit.\n~gong")
     original_dir = os.getcwd()
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.start()
-    time.sleep(2)
+    time.sleep(20)
     try:
         os.chdir(original_dir)
         run_vue()

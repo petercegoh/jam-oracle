@@ -16,7 +16,8 @@ export default {
     };
   },
   methods: {
-    onSubmit() {
+  onSubmit() {
+      console.log('Submitting form with:', { start: this.start, end: this.end });
       this.$emit('submit', this.start, this.end);
     }
   }

@@ -1,4 +1,5 @@
 # jam-oracle
+
 "beat the jam is really good for getting to JB and back. what if we could create congestion graph for any two arbitary places?"
 
 Given a route between two locations commutable by car/bus, it graphs the expected and current delay time added by traffic congestion against time of the day. 
@@ -9,3 +10,29 @@ Google Maps API does not provide direct access to historical traffic data. To ob
 Google Maps API Predictive Data:
 The Directions API can offer predictive travel times if you supply a future departure time. By using parameters like departure_time (set to a future time) along with the traffic_model (e.g., "best_guess", "optimistic", "pessimistic"), you can get an estimate of congestion-based delays.
 
+## Contributors
+
+<table>
+	<tbody>
+        <tr>
+            <td align="center">
+                <a href="https://www.linkedin.com/in/gabriel-zmong/">
+                    <img src="https://avatars.githubusercontent.com/u/117062305?v=4" width="100;" alt="gongahkia"/>
+                    <br />
+                    <sub><b>Gabriel Ong</b></sub>
+                </a>
+                <br />
+                <sub><a href="./src/frontend/">Frontend<a></sub>
+            </td>
+            <td align="center">
+                <a href="">
+                    <img src="https://avatars.githubusercontent.com/u/128559610?v=4" width="100;" alt="petercegoh"/>
+                    <br />
+                    <sub><b>Peter Goh</b></sub>
+                </a>
+                <br />
+                <sub><a href="./src/backend/">Backend<a></sub>
+            </td>
+        </tr>
+	</tbody>
+</table>

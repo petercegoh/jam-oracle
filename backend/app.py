@@ -4,13 +4,13 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 from datetime import datetime, timedelta
+from flask_cors import CORS
 import matplotlib
 matplotlib.use("Agg")  # Set the backend to Agg
 import matplotlib.pyplot as plt
-from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app) # enable CORS for axios interaction
+CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 
 # Fetch the API key from environment variables
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
@@ -18,7 +18,7 @@ if not GOOGLE_MAPS_API_KEY:
     raise ValueError("Google Maps API key not found in environment variables.")
 
 # Ensure the 'graphpics' folder exists
-GRAPH_FOLDER = "graphpics"
+GRAPH_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "graphpics")
 if not os.path.exists(GRAPH_FOLDER):
     os.makedirs(GRAPH_FOLDER)
 
@@ -86,6 +86,7 @@ def generate_graph(start, end, route_index, route_data):
 #Optimization: If the API calls take too long, consider using asynchronous programming (e.g., asyncio or concurrent.futures) to make requests concurrently.
 @app.route("/get-routes-and-graphs", methods=["GET"])
 def get_routes_and_graphs():
+    print("Received request for get-routes-and-graphs")
     start = request.args.get("start")
     end = request.args.get("end")
 

@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import api from './services/api';
 import RouteForm from './components/RouteForm.vue';
 import RouteList from './components/RouteList.vue';
 import TrafficGraph from './components/TrafficGraph.vue';
@@ -27,13 +27,21 @@ export default {
     };
   },
   methods: {
-    async getRoutes(start, end) {
+     async getRoutes(start, end) {
+      console.log('Fetching routes for:', { start, end });
       try {
-        const response = await axios.get(`http://localhost:5000/get-routes-and-graphs?start=${start}&end=${end}`);
+        const response = await api.get(`/get-routes-and-graphs`, {
+          params: { start, end }
+        });
         this.routes = response.data.routes;
         this.selectedGraphUrl = null;
       } catch (error) {
         console.error('Error fetching routes:', error);
+        // Add more detailed error logging
+        if (error.response) {
+          console.error('Response data:', error.response.data);
+          console.error('Response status:', error.response.status);
+        }
       }
     },
     selectRoute(graphUrl) {
