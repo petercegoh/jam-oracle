@@ -2,7 +2,7 @@
 
 ## Usage
 
-1. Enable CORS in Flask backend.
+1. Place your Google Maps API key in a `.env` file.
 2. Run the below.
 
 ```console
