@@ -7,8 +7,10 @@ from datetime import datetime, timedelta
 import matplotlib
 matplotlib.use("Agg")  # Set the backend to Agg
 import matplotlib.pyplot as plt
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app) # enable CORS for axios interaction
 
 # Fetch the API key from environment variables
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
