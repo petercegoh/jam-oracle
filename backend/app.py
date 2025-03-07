@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "http://localhost:8080"}})
 
+
 # Fetch the API key from environment variables
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 if not GOOGLE_MAPS_API_KEY:
@@ -79,6 +80,9 @@ def generate_graph(start, end, route_index, route_data):
     plt.close()
 
     return graph_path
+@app.route('/')
+def home():
+    return "Welcome to the home page! Please access the resouce at /get-routes-and-graphs"
 
 
 # Caching: To improve performance, cache the graph image if the same request is made multiple times.
@@ -125,6 +129,8 @@ def get_routes_and_graphs():
 
         # Generate the graph for this route
         generate_graph(start, end, i, route)
+
+    print(routes)
 
     # Return route information and graph URLs
     return jsonify({"routes": routes})

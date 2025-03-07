@@ -10,6 +10,26 @@ Google Maps API does not provide direct access to historical traffic data. To ob
 Google Maps API Predictive Data:
 The Directions API can offer predictive travel times if you supply a future departure time. By using parameters like departure_time (set to a future time) along with the traffic_model (e.g., "best_guess", "optimistic", "pessimistic"), you can get an estimate of congestion-based delays.
 
+## Local Running Instructions
+
+*to remind myself because im a noob programmer and i dont know how to run a python file*
+
+Create python virtual environment
+`python3 -m venv myenv`
+
+Activate it
+`source myenv/bin/activate`
+
+Install dependencies
+`pip install Flask requests matplotlib python-dotenv flask-cors`
+
+Navigate to /frontend
+`npm install axios`
+
+Navigate back to /jam_oracle
+`python3 main.py`
+
+
 ## Contributors
 
 <table>
