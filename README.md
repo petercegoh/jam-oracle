@@ -4,7 +4,9 @@ Have you ever sat in your car, caught in a terrible traffic jam, and asked yours
 
 Look no futher! **Jam Oracle** is a telegram bot that visualises traffic congestion for your frequently taken routes. 
 
-Given a start and end location, Jam Oracle plots a predictive graph based on historical to **tell you exactly when traffic picks up or subsides** for the top 3 possible routes. After 24 hours, you'll recieve a more accurate graph of **how traffic actually played out that day.** 
+Given a start and end location, Jam Oracle plots a predictive graph based on historical data to **tell you exactly when traffic picks up or subsides** for the top 3 possible routes. 
+
+After 24 hours, you'll recieve a more accurate graph of **how traffic actually played out that day.** 
 
 See how well our predictors do, and use the information to plan your next trip!
 
