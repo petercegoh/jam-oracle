@@ -23,6 +23,10 @@ GRAPH_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "graphpi
 if not os.path.exists(GRAPH_FOLDER):
     os.makedirs(GRAPH_FOLDER)
 
+@app.route('/')
+def home():
+    return "Welcome to the home page! Please access the resouce at /get-routes-and-graphs"
+
 def generate_graph(start, end, route_index, route_data):
     # Initialize lists to store data for the graph
     times = []
@@ -80,14 +84,8 @@ def generate_graph(start, end, route_index, route_data):
     plt.close()
 
     return graph_path
-@app.route('/')
-def home():
-    return "Welcome to the home page! Please access the resouce at /get-routes-and-graphs"
 
 
-# Caching: To improve performance, cache the graph image if the same request is made multiple times.
-#Error Handling: Add error handling for cases where the API returns no routes or invalid data.
-#Optimization: If the API calls take too long, consider using asynchronous programming (e.g., asyncio or concurrent.futures) to make requests concurrently.
 @app.route("/get-routes-and-graphs", methods=["GET"])
 def get_routes_and_graphs():
     print("Received request for get-routes-and-graphs")

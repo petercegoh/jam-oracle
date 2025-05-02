@@ -3,3 +3,6 @@ requests
 dotenv
 flask_cors
 matplotlib
+python-telegram-bot==20.7
+scipy
+
