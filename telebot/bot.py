@@ -4,7 +4,6 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, CallbackContext
 
 # Load your bot token (replace 'YOUR_BOT_TOKEN' with the actual token)
-BOT_TOKEN = "7670787437:AAFnDG0HbhFB0rm-KCp-ANu2ZmAMgs0Bfbs"
 BACKEND_URL = "http://127.0.0.1:5000"  # Change this if your Flask app runs elsewhere
 
 async def start(update: Update, context: CallbackContext) -> None:
