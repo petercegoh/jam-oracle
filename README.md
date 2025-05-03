@@ -4,24 +4,28 @@ Have you ever sat in your car, caught in a terrible traffic jam, and asked yours
 
 Look no futher! **Jam Oracle** is a telegram bot that predicts and visualizes traffic congestion on optimal routes for any driving commute.
 
-Given a start and end location, Jam Oracle plots a predictive graph based on historical data to **tell you exactly when traffic picks up or subsides** for the top 3 possible routes. 
-
-After 24 hours, you'll recieve a more accurate graph of **how traffic actually played out that day.** 
+Given a start and end location, Jam Oracle **tells you exactly when traffic picks up or subsides** for the top 3 possible routes. 
 
 See how well our predictors do, and use the information to plan your next trip!
 
 
-## Ideation
+## Inspiration
 
-"beat the jam is really good for getting to JB and back. what if we could create congestion graph for any two arbitary places?"
+[Beat The Jam]([/guides/content/editing-an-existing-page](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://apps.apple.com/sg/app/beat-the-jam/id1204898821&ved=2ahUKEwiizLG9pYaNAxU-xTgGHVcCKH8QFnoECBMQAQ&usg=AOvVaw1BCjngzYGpw1JzQ87Uw_VC)), but for arbitary places.
 
-Given a route between two locations commutable by car/bus, can we graph the expected and current delay time added by traffic congestion against time of the day?
+## Approaches considered 
 
 Google Maps API Historical Data:
 Google Maps API does not provide direct access to historical traffic data. To obtain historical trends, you’d need to build your own dataset by periodically querying the API and storing the results over time. Not viable for user-facing app but good for regression insights.
 
 Google Maps API Predictive Data:
 The Directions API can offer predictive travel times if you supply a future departure time. By using parameters like departure_time (set to a future time) along with the traffic_model (e.g., "best_guess", "optimistic", "pessimistic"), you can get an estimate of congestion-based delays.
+
+## TODOs
+
+After 24 hours, give users a more accurate graph of **how traffic actually played out that day.** 
+
+Provide app links to google maps navigation for each possible route.
 
 ## Local Running Instructions
 
@@ -34,13 +38,10 @@ Activate it
 `source myenv/bin/activate`
 
 Install dependencies
-`pip install Flask requests matplotlib python-dotenv flask-cors`
+'pip install -r requirements.txt'
 
-Navigate to /frontend
-`npm install axios`
-
-Navigate back to /jam_oracle
-`python3 main.py`
+Navigate back to /telebot
+`python3 bot.py`
 
 
 ## Contributors
