@@ -307,33 +307,31 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
             print(f"Error sending image: {e}")
 
 
-
 async def main():
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-    # Add handlers first
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("traffic", traffic))
-    app.add_handler(CommandHandler("credits", check_credits))
+    # Create application properly with async context manager
+    async with ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build() as app:
+        # Add handlers inside the context
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("traffic", traffic))
+        app.add_handler(CommandHandler("credits", check_credits))
 
-    # Get Render-provided port
-    port = int(os.environ.get("PORT", 8000))
-    
-    # Webhook configuration
-    await app.bot.set_webhook(
-        url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
-        allowed_updates=Update.ALL_TYPES
-    )
-    
-    # Start web server directly
-    await app.run_webhook(
-        listen="0.0.0.0",
-        port=port,
-        url_path=TELEGRAM_BOT_TOKEN,
-        webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
-    )
-
-    print(f"Bot is running with webhook on port {port}")
-    await app.updater.idle()
+        # Get Render's port
+        port = int(os.environ.get("PORT", 8000))
+        
+        # Configure webhook
+        await app.bot.set_webhook(
+            url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
+            allowed_updates=Update.ALL_TYPES
+        )
+        
+        # Start webhook server
+        await app.run_webhook(
+            listen="0.0.0.0",
+            port=port,
+            url_path=TELEGRAM_BOT_TOKEN,
+            webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
+        )
 
 if __name__ == "__main__":
+    # Use the standard asyncio runner
     asyncio.run(main())
