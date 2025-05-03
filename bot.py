@@ -307,24 +307,22 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
             print(f"Error sending image: {e}")
 
 
-async def main():
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+# Init
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")  # e.g. https://your-app.onrender.com
+PORT = int(os.environ.get("PORT", 8000))
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("traffic", traffic))
-    app.add_handler(CommandHandler("credits", check_credits))
+# Main setup
+application = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
 
-    port = int(os.environ.get("PORT", 8000))
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("traffic", traffic))
+application.add_handler(CommandHandler("credits", check_credits))
 
-    # Set webhook (Telegram must know where to send updates)
-    await app.bot.set_webhook(url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}")
-
-    # Run the webhook server
-    await app.run_webhook(
-        listen="0.0.0.0",
-        port=port,
-        url_path=TELEGRAM_BOT_TOKEN,
-    )
-
-if __name__ == "__main__":
-    main()
+# Set webhook and start the server
+application.run_webhook(
+    listen="0.0.0.0",
+    port=PORT,
+    url_path=TELEGRAM_BOT_TOKEN,
+    webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
+)
