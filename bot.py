@@ -313,6 +313,7 @@ async def main():
     app.add_handler(CommandHandler("credits", check_credits))
     print("Bot is running...")
 
+    await app.initialize()
     await app.start()
     await app.bot.set_webhook(url=os.getenv("WEBHOOK_URL"))
     await app.updater.start_webhook(
