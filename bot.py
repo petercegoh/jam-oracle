@@ -16,6 +16,8 @@ import boto3
 
 import asyncio
 
+from aiohttp import web
+
 # TOOOs: Credit system and image caching on AWS S3. Then deploy.
 
 load_dotenv()
@@ -308,29 +310,26 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    # Add handlers first
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("traffic", traffic))
     app.add_handler(CommandHandler("credits", check_credits))
-    print("Bot is running...")
 
-    print("Initializing bot...")
-
-    await app.initialize()
-    await app.start()
-
-    port = int(os.environ.get("PORT", 5000))
-    webhook_path = f"/{TELEGRAM_BOT_TOKEN}"
-    full_webhook_url = f"{WEBHOOK_URL}{webhook_path}"
-
-    # Set Telegram webhook
-    await app.bot.set_webhook(full_webhook_url)
-
-    # Start webhook server
-    await app.updater.start_webhook(
+    # Get Render-provided port
+    port = int(os.environ.get("PORT", 8000))
+    
+    # Webhook configuration
+    await app.bot.set_webhook(
+        url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
+        allowed_updates=Update.ALL_TYPES
+    )
+    
+    # Start web server directly
+    await app.run_webhook(
         listen="0.0.0.0",
         port=port,
         url_path=TELEGRAM_BOT_TOKEN,
-        webhook_url=full_webhook_url,
+        webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
     )
 
     print(f"Bot is running with webhook on port {port}")

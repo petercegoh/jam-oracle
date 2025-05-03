@@ -3,7 +3,10 @@ requests
 dotenv
 flask_cors
 matplotlib
-python-telegram-bot==20.7
+#python-telegram-bot==20.7
 scipy
 psycopg2
 boto3
+
+python-telegram-bot[async]~=20.5
+aiohttp~=3.8.6
