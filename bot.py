@@ -6,9 +6,12 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from datetime import datetime, timedelta
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackContext
 
+
 from scipy.interpolate import make_interp_spline
 import numpy as np
 import shlex
+
+# TOOOs: Credit system and image caching on Replit DB. Then deploy.
 
 load_dotenv()
 
@@ -31,6 +34,8 @@ def validate_address(address):
     }
     response = requests.get(url, params=params)
     data = response.json()
+
+    print(data)
 
     results = data.get("results", [])
     if data.get("status") == "OK" and results:
@@ -152,7 +157,7 @@ def get_routes_and_graphs(start, end):
     data = response.json()
 
     if "routes" not in data or not data["routes"]: # find out how to return the error gracefully TODO
-        return "No commutable routes found.", False
+        return "No commutable driving routes found.", False
 
     # Extract route information and generate graphs
     routes = []
@@ -181,6 +186,28 @@ def get_routes_and_graphs(start, end):
     # Return route information and graph URLs
     return route_summaries, graph_path
 
+async def check_and_respond_address(label, user_input, update):
+    is_valid, resolved = validate_address(user_input)
+
+    if is_valid:
+        await update.message.reply_text(
+            f"✅ {label} Address Resolution:\n*{resolved}*",
+            parse_mode="Markdown"
+        )
+        return True, resolved
+    else:
+        await update.message.reply_text(
+            f"❌ Couldn't find the {label.lower()}: *{user_input}*",
+            parse_mode="Markdown"
+        )
+        status, suggestions = suggest_address(user_input)
+        if status and suggestions:
+            suggestion_text = "\n".join(suggestions)
+            await update.message.reply_text(f"Did you mean:\n{suggestion_text}")
+        else:
+            await update.message.reply_text(f"❌ No address suggestions found.")
+        return False, None
+
 async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
@@ -206,45 +233,15 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("START: ", start)
     print("END: ", end)
 
-    # SORRY im lazy to refactor this async function. maybe next time.
-        # Validate origin
-    is_start_valid, resolved_start_address = validate_address(start)
+    # poor refactoring
+    # Validate origin
+    is_start_valid, resolved_start_address = await check_and_respond_address("Start", start, update)
 
-    if is_start_valid:
-        await update.message.reply_text(
-        f"✅ Start Address Resolution:\n*{resolved_start_address}*",
-        parse_mode="Markdown"
-    )
-    else:
-        await update.message.reply_text(
-            f"❌ Couldn't find the origin: *{start}*",
-            parse_mode="Markdown"
-        )
-        status, suggestions = suggest_address(start)
-        suggestion_text = "\n".join(suggestions)
-        if status:
-            await update.message.reply_text(f"Did you mean:\n{suggestion_text}")
-        else:
-            await update.message.reply_text(f"❌ No address suggestions found.")
-    
-    is_end_valid, resolved_end_address = validate_address(end)
+    is_end_valid, resolved_end_address = await check_and_respond_address("End", end, update)
 
-    if is_end_valid:
-        await update.message.reply_text(
-        f"✅ End Address Resolution:\n*{resolved_end_address}*",
-        parse_mode="Markdown"
-    )
-    else:
-        await update.message.reply_text(
-            f"❌ Couldn't find the origin: *{end}*",
-            parse_mode="Markdown"
-        )
-        status, suggestions = suggest_address(end)
-        suggestion_text = "\n".join(suggestions)
-        if status:
-            await update.message.reply_text(f"Did you mean:\n{suggestion_text}")
-        else:
-            await update.message.reply_text(f"❌ No address suggestions found.")
+    print("start valid: ", is_start_valid)
+    print("end valid: ", is_end_valid)
+
     
     if not is_start_valid or not is_end_valid: # if either didnt hit, dont bother to find the route between them
         return
