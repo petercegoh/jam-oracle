@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS user_credits (
+    user_id BIGINT PRIMARY KEY,
+    credits INTEGER NOT NULL DEFAULT 5,
+    last_reset TIMESTAMP NOT NULL DEFAULT NOW()
+);

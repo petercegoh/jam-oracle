@@ -5,13 +5,16 @@ from dotenv import load_dotenv
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from datetime import datetime, timedelta
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackContext
-
-
 from scipy.interpolate import make_interp_spline
 import numpy as np
 import shlex
 
-# TOOOs: Credit system and image caching on Replit DB. Then deploy.
+from credits import ensure_user, has_credits, use_credit, get_credits
+
+import io
+import boto3
+
+# TOOOs: Credit system and image caching on AWS S3. Then deploy.
 
 load_dotenv()
 
@@ -63,6 +66,8 @@ def suggest_address(address): # if miss, we're going to try to suggest a place
     else:
         return False, []
 
+
+
 def generate_graph(start, end):
     times = []
     route_durations = [[] for _ in range(3)]
@@ -79,7 +84,7 @@ def generate_graph(start, end):
         params = {
             "origin": start,
             "destination": end,
-            "key": GOOGLE_MAPS_API_KEY,
+            "key": os.getenv("GOOGLE_MAPS_API_KEY"),
             "mode": "driving",
             "departure_time": departure_timestamp,
             "traffic_model": "best_guess",
@@ -100,7 +105,6 @@ def generate_graph(start, end):
                 else:
                     route_durations[i].append(None)
 
-    # Convert time strings to numeric x values for interpolation
     x_numeric = np.arange(len(times))
     x_labels = times
 
@@ -109,13 +113,12 @@ def generate_graph(start, end):
 
     for i in range(3):
         y = route_durations[i]
-        if any(y) and len(y) >= 4:  # Ensure enough points for smoothing
+        if any(y) and len(y) >= 4:
             y_array = np.array([val if val is not None else np.nan for val in y])
             mask = ~np.isnan(y_array)
             x_masked = x_numeric[mask]
             y_masked = y_array[mask]
 
-            # Smooth the line using cubic spline
             spline = make_interp_spline(x_masked, y_masked, k=3)
             x_smooth = np.linspace(x_masked.min(), x_masked.max(), 200)
             y_smooth = spline(x_smooth)
@@ -132,12 +135,28 @@ def generate_graph(start, end):
     plt.grid(True)
     plt.tight_layout()
 
-    graph_filename = f"{start}_to_{end}_all_routes.png".replace("/", "_")
-    graph_path = os.path.join(GRAPH_FOLDER, graph_filename)
-    plt.savefig(graph_path)
+    # Save image to memory buffer
+    image_buffer = io.BytesIO()
+    plt.savefig(image_buffer, format='png')
     plt.close()
+    image_buffer.seek(0)
 
-    return graph_path
+    # Upload to S3
+    s3 = boto3.client("s3")
+    bucket = os.getenv("S3_BUCKET_NAME")
+    region = os.getenv("S3_REGION_NAME")
+
+    safe_filename = f"{start}_to_{end}_{datetime.now().isoformat()}.png".replace("/", "_")
+    s3.upload_fileobj(
+        image_buffer,
+        bucket,
+        safe_filename,
+        ExtraArgs={"ContentType": "image/png"}  # ✅ no ACL
+    )
+
+    image_url = f"https://{bucket}.s3.{region}.amazonaws.com/{safe_filename}"
+    return image_url
+
 
 def get_routes_and_graphs(start, end):
     print("Received request for get-routes-and-graphs")
@@ -208,7 +227,28 @@ async def check_and_respond_address(label, user_input, update):
             await update.message.reply_text(f"❌ No address suggestions found.")
         return False, None
 
+
+async def check_credits(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    ensure_user(user_id)
+    credits = get_credits(user_id)
+        
+    await update.message.reply_text(f"💳 You have {credits} credits remaining.")
+
 async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    ensure_user(user_id)
+
+    if not has_credits(user_id):
+        await update.message.reply_text("🚫 You're out of credits.")
+        return
+
+    use_credit(user_id)
+
+    credits = get_credits(user_id)
+    
+    await update.message.reply_text(f"🚦 Checking traffic... (Credits left: {credits})")
+
     text = update.message.text
 
     # Remove the "/traffic" part and format inv commas for preprocessing
@@ -247,24 +287,28 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     try:
-        routes, graph_path = get_routes_and_graphs(start, end)
+        routes, image_url = get_routes_and_graphs(start, end)
     except Exception as e:
         await update.message.reply_text(f"Error retrieving routes: {str(e)}")
         return
 
     await update.message.reply_text(routes)
 
-    if graph_path: 
+    if image_url:
         try:
-            with open(graph_path, 'rb') as photo:
-                await update.message.reply_photo(photo)
-        except FileNotFoundError:
-            await update.message.reply_text("Graph image not found.")
+            await update.message.reply_photo(photo=image_url)
+        except Exception as e:
+            await update.message.reply_text("Failed to load the graph image.")
+            # Optionally log or print the exception
+            print(f"Error sending image: {e}")
+
+
 
 def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("traffic", traffic))
+    app.add_handler(CommandHandler("credits", check_credits))
     print("Bot is running...")
     app.run_polling()
 
