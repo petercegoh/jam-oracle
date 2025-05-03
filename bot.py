@@ -306,32 +306,51 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
             # Optionally log or print the exception
             print(f"Error sending image: {e}")
 
-
 async def main():
-    # Create application properly with async context manager
-    async with ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build() as app:
-        # Add handlers inside the context
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(CommandHandler("traffic", traffic))
-        app.add_handler(CommandHandler("credits", check_credits))
+    # Create application without using the context manager
+    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
+    
+    # Add handlers
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("traffic", traffic))
+    app.add_handler(CommandHandler("credits", check_credits))
 
-        # Get Render's port
-        port = int(os.environ.get("PORT", 8000))
-        
-        # Configure webhook
-        await app.bot.set_webhook(
-            url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
-            allowed_updates=Update.ALL_TYPES
-        )
-        
-        # Start webhook server
-        await app.run_webhook(
-            listen="0.0.0.0",
-            port=port,
-            url_path=TELEGRAM_BOT_TOKEN,
-            webhook_url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
-        )
+    # Get Render's port
+    port = int(os.environ.get("PORT", 8000))
+    
+    # Create aiohttp web application
+    web_app = web.Application()
+    web_app.add_routes([web.post(f'/{TELEGRAM_BOT_TOKEN}', app.updater.dispatcher.update_request)])
+
+    # Create webhook server
+    runner = web.AppRunner(web_app)
+    await runner.setup()
+    
+    # Start web server directly
+    site = web.TCPSite(runner, host='0.0.0.0', port=port)
+    await site.start()
+
+    # Set webhook after server starts
+    await app.bot.set_webhook(
+        url=f"{WEBHOOK_URL}/{TELEGRAM_BOT_TOKEN}",
+        allowed_updates=Update.ALL_TYPES
+    )
+
+    # Keep the server running
+    while True:
+        await asyncio.sleep(3600)  # Sleep for 1 hour
+
+    # Cleanup (will never reach here, but good practice)
+    await runner.cleanup()
 
 if __name__ == "__main__":
-    # Use the standard asyncio runner
-    asyncio.run(main())
+    # Handle proper shutdown
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    
+    try:
+        loop.run_until_complete(main())
+    except KeyboardInterrupt:
+        pass
+    finally:
+        loop.close()
