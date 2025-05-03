@@ -19,7 +19,7 @@ import asyncio
 # TOOOs: Credit system and image caching on AWS S3. Then deploy.
 
 load_dotenv()
-
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
@@ -313,14 +313,27 @@ async def main():
     app.add_handler(CommandHandler("credits", check_credits))
     print("Bot is running...")
 
+    print("Initializing bot...")
+
     await app.initialize()
     await app.start()
-    await app.bot.set_webhook(url=os.getenv("WEBHOOK_URL"))
+
+    port = int(os.environ.get("PORT", 5000))
+    webhook_path = f"/{TELEGRAM_BOT_TOKEN}"
+    full_webhook_url = f"{WEBHOOK_URL}{webhook_path}"
+
+    # Set Telegram webhook
+    await app.bot.set_webhook(full_webhook_url)
+
+    # Start webhook server
     await app.updater.start_webhook(
         listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
-        url_path="",
+        port=port,
+        url_path=TELEGRAM_BOT_TOKEN,
+        webhook_url=full_webhook_url,
     )
+
+    print(f"Bot is running with webhook on port {port}")
     await app.updater.idle()
 
 if __name__ == "__main__":
