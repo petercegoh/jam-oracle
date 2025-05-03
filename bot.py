@@ -14,6 +14,8 @@ from credits import ensure_user, has_credits, use_credit, get_credits
 import io
 import boto3
 
+import asyncio
+
 # TOOOs: Credit system and image caching on AWS S3. Then deploy.
 
 load_dotenv()
@@ -304,13 +306,21 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
-def main():
+async def main():
     app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("traffic", traffic))
     app.add_handler(CommandHandler("credits", check_credits))
     print("Bot is running...")
-    app.run_polling()
+
+    await app.start()
+    await app.bot.set_webhook(url=os.getenv("WEBHOOK_URL"))
+    await app.updater.start_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        url_path="",
+    )
+    await app.updater.idle()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
