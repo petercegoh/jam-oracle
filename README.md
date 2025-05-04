@@ -21,7 +21,7 @@ Provide app links to google maps navigation for each possible route.
 
 ## Local Running Instructions
 
-*@JamOracleBot is deployed as a Render web service (free tier) that sleeps on inactivity. On command, it should take a minute to spin up, but here's how you can run it yourself*
+*@JamOracleBot is deployed as a Render web service that sleeps on inactivity (unoptimal, but background workers are paid). On command, it should take a minute to spin up, but here's how you can run it yourself*
 
 Locally running code on main branch, code for deloyment on branch 03052025
 
