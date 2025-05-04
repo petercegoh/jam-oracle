@@ -2,7 +2,7 @@
 
 Have you ever sat in your car, caught in a terrible traffic jam, and asked yourself: **"Could I have avoided this? What time does the rush hour really start? Maybe if I left a little earlier..."**?
 
-Look no futher! **Jam Oracle** is a telegram bot that predicts and visualizes traffic congestion on optimal routes for any driving commute.
+Look no futher! **Jam Oracle** is a telegram bot that predicts and visualizes rush-hour congestion on your personal driving commute.
 
 Given a start and end location, Jam Oracle **tells you exactly when traffic picks up or subsides** for the top 3 possible routes. 
 
@@ -13,15 +13,7 @@ See how well our predictors do, and use the information to plan your next trip!
 
 [Beat The Jam]([/guides/content/editing-an-existing-page](https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://apps.apple.com/sg/app/beat-the-jam/id1204898821&ved=2ahUKEwiizLG9pYaNAxU-xTgGHVcCKH8QFnoECBMQAQ&usg=AOvVaw1BCjngzYGpw1JzQ87Uw_VC)), but for arbitary places.
 
-## Approaches considered 
-
-Google Maps API Historical Data:
-Google Maps API does not provide direct access to historical traffic data. To obtain historical trends, you’d need to build your own dataset by periodically querying the API and storing the results over time. Not viable for user-facing app but good for regression insights.
-
-Google Maps API Predictive Data:
-The Directions API can offer predictive travel times if you supply a future departure time. By using parameters like departure_time (set to a future time) along with the traffic_model (e.g., "best_guess", "optimistic", "pessimistic"), you can get an estimate of congestion-based delays.
-
-## TODOs
+## Extensions
 
 After 24 hours, give users a more accurate graph of **how traffic actually played out that day.** 
 
@@ -29,19 +21,33 @@ Provide app links to google maps navigation for each possible route.
 
 ## Local Running Instructions
 
-*to remind myself because im a noob programmer and i dont know how to run a python file*
+*@JamOracleBot is deployed as a Render web service (free tier) that sleeps on inactivity. On command, it should take a minute to spin up, but here's how you can run it yourself*
 
-Create python virtual environment
+Locally running code on main branch, code for deloyment on branch 03052025
+
+1. Create a new bot using @BotFather on Telegram to get the TELEGRAM_BOT_TOKEN
+
+2. Create a GOOGLE_MAPS_API_KEY on Google Cloud, enabling Places, Geocode, Directions services
+
+3. Put tokens in .env file
+
+4. Create python virtual environment
+   
 `python3 -m venv myenv`
 
-Activate it
+6. Activate it
+
 `source myenv/bin/activate`
 
-Install dependencies
-'pip install -r requirements.txt'
+7. Install dependencies
 
-Navigate back to /telebot
+`pip install -r requirements.txt`
+
+8. Navigate back to
+   
 `python3 bot.py`
+
+Your bot is live and responding to commands!
 
 
 ## Contributors
