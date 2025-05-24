@@ -40,7 +40,7 @@ Activate it
 Install dependencies
 'pip install -r requirements.txt'
 
-Navigate back to /telebot
+Run python
 `python3 bot.py`
 
 
