@@ -18,6 +18,15 @@ import asyncio
 
 from aiohttp import web
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,  # or DEBUG for more detail
+    format="%(asctime)s [%(levelname)s] %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
 # TOOOs: Credit system and image caching on AWS S3. Then deploy.
 
 load_dotenv()
@@ -44,7 +53,7 @@ def validate_address(address):
     response = requests.get(url, params=params)
     data = response.json()
 
-    print(data)
+    #print(data)
 
     results = data.get("results", [])
     if data.get("status") == "OK" and results:
@@ -63,7 +72,8 @@ def suggest_address(address): # if miss, we're going to try to suggest a place
     response = requests.get(url, params=params)
     data = response.json()
 
-    print(data)
+    #print(data)
+
 
     if data.get("status") == "OK" and data.get("predictions"): # if there are suggestions, and there are predictions,
         suggestions = [p["description"] for p in data["predictions"][:3]]
@@ -165,7 +175,7 @@ def generate_graph(start, end):
 
 
 def get_routes_and_graphs(start, end):
-    print("Received request for get-routes-and-graphs")
+    logger.info("Received request for get-routes-and-graphs")
 
     # Fetch route information from Google Maps API
     url = "https://maps.googleapis.com/maps/api/directions/json"
@@ -199,11 +209,13 @@ def get_routes_and_graphs(start, end):
     # Generate the graph for this route
     image_url = generate_graph(start, end)
 
-    print(routes)
+    #print(routes)
+    logger.info(routes)
 
     route_summaries = []
     for i, route in enumerate(routes, start=1):
-        summary_line = f"Route {i}: {route['summary']}, {route['duration_considering_traffic']}, {route['distance']}"
+        #summary_line = f"Route {i}: {route['summary']}, {route['duration_considering_traffic']}, {route['distance']}"
+        summary_line = f"Route {i}: {route['summary']},{route['distance']}"
         route_summaries.append(summary_line)
     
     route_summaries = "\n".join(route_summaries)
@@ -281,17 +293,21 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     start = args[0]
     end = args[1]
 
-    print("START: ", start)
-    print("END: ", end)
+    logger.info("START: %s", start)
+    logger.info("END: %s", end)
+
 
     # poor refactoring
     # Validate origin
     is_start_valid, resolved_start_address = await check_and_respond_address("Start", start, update)
+    # these actually send messages
 
     is_end_valid, resolved_end_address = await check_and_respond_address("End", end, update)
 
-    print("start valid: ", is_start_valid)
-    print("end valid: ", is_end_valid)
+
+    logger.info("start valid: %s ", is_start_valid)
+    logger.info("end valid: %s ", is_end_valid)
+
 
     
     if not is_start_valid or not is_end_valid: # if either start or end didnt hit, dont bother to find the route between them
@@ -303,7 +319,7 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Error retrieving routes: {str(e)}")
         return
 
-    await update.message.reply_text(routes)
+    await update.message.reply_text(routes) 
 
     if image_url:
         try:
@@ -312,6 +328,7 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("Failed to load the graph image.")
             # Optionally log or print the exception
             print(f"Error sending image: {e}")
+            logger.error("Failed to send image", exc_info=True)
 
 
 # Init
