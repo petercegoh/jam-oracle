@@ -26,10 +26,12 @@ GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Ensure the 'graphpics' folder exists
-GRAPH_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "graphpics")
+GRAPH_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "graphpics") # with s3, im not using this anymore
 if not os.path.exists(GRAPH_FOLDER):
     os.makedirs(GRAPH_FOLDER)
 
+
+### TELE COMMAND 
 async def start(update: Update, context: CallbackContext) -> None:
     await update.message.reply_text('Hello! Send the command: \n\n/traffic \"origin address\" \"destination address\" \n\nto get traffic details. Make sure your origin and destination are valid addresses, encased in inverted commas!')
 
@@ -71,7 +73,7 @@ def suggest_address(address): # if miss, we're going to try to suggest a place
         return False, []
 
 
-
+# this returns the link for the s3 bucket
 def generate_graph(start, end):
     times = []
     route_durations = [[] for _ in range(3)]
@@ -194,8 +196,8 @@ def get_routes_and_graphs(start, end):
         }
         routes.append(route_info)
 
-        # Generate the graph for this route
-        graph_path = generate_graph(start, end)
+    # Generate the graph for this route
+    image_url = generate_graph(start, end)
 
     print(routes)
 
@@ -207,13 +209,15 @@ def get_routes_and_graphs(start, end):
     route_summaries = "\n".join(route_summaries)
 
     # Return route information and graph URLs
-    return route_summaries, graph_path
+    return route_summaries, image_url
 
-async def check_and_respond_address(label, user_input, update):
+### not a tele command but still async because it uses await update.message.reply_text(...). any function that uses await must be declared async
+async def check_and_respond_address(label, user_input, update): # a validation function for provided addresses 
+    #(technically the responsibility of sending of messages COULD given to traffic(), the outer async function )
     is_valid, resolved = validate_address(user_input)
 
     if is_valid:
-        await update.message.reply_text(
+        await update.message.reply_text( # basically asking the code to send a tele message. 
             f"✅ {label} Address Resolution:\n*{resolved}*",
             parse_mode="Markdown"
         )
@@ -232,6 +236,7 @@ async def check_and_respond_address(label, user_input, update):
         return False, None
 
 
+### TELE COMMAND
 async def check_credits(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     ensure_user(user_id)
@@ -239,6 +244,8 @@ async def check_credits(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
     await update.message.reply_text(f"💳 You have {credits} credits remaining.")
 
+
+### TELE COMMAND
 async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     ensure_user(user_id)
@@ -287,7 +294,7 @@ async def traffic(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("end valid: ", is_end_valid)
 
     
-    if not is_start_valid or not is_end_valid: # if either didnt hit, dont bother to find the route between them
+    if not is_start_valid or not is_end_valid: # if either start or end didnt hit, dont bother to find the route between them
         return
 
     try:

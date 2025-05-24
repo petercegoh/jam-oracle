@@ -1,3 +1,5 @@
+# just to test the generate graph functions without running the full fow
+
 from bot import generate_graph
 
 
