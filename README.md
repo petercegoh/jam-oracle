@@ -2,9 +2,13 @@
 
 Have you ever sat in your car, caught in a terrible traffic jam, and asked yourself: **"Could I have avoided this? What time does the rush hour really start? Maybe if I left a little earlier..."**?
 
+![Problem Statement](images/problem_statement.png)
+
 Look no futher! **Jam Oracle** is a telegram bot that predicts and visualizes rush-hour congestion on your personal driving commute.
 
 Given a start and end location, Jam Oracle **tells you exactly when traffic picks up or subsides** for the top 3 possible routes. 
+
+![Tele Chat](images/tele_chat.png)
 
 See how well our predictors do, and use the information to plan your next trip!
 
