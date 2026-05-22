@@ -53,6 +53,10 @@ def shape_routes(
                     HourlyDataPoint(hour=f"{hour:02d}:00", duration_minutes=duration_minutes)
                 )
 
+        if mode == "transit" and len(hourly_points) > 1:
+            min_dur = min(p.duration_minutes for p in hourly_points)
+            hourly_points = [p for p in hourly_points if p.duration_minutes <= min_dur * 3]
+
         if mode == "transit":
             transit_legs = _extract_transit_legs(route)
             summary = _transit_summary(transit_legs)

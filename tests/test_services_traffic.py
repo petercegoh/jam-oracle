@@ -87,6 +87,32 @@ def test_shape_transit_legs_fields():
     assert r.transfers == 1   # two transit legs = one transfer
 
 
+def test_shape_transit_drops_duration_outliers():
+    """Hours where duration > 3x the route minimum are dropped (e.g. 1am night-bus anomaly)."""
+    normal_route = {
+        "legs": [{
+            "distance": {"text": "8 km", "value": 8000},
+            "duration": {"text": "35 mins", "value": 2100},   # 35 min — typical
+            "steps": [],
+        }]
+    }
+    outlier_route = {
+        "legs": [{
+            "distance": {"text": "8 km", "value": 8000},
+            "duration": {"text": "269 mins", "value": 16140},  # 269 min — 1am anomaly
+            "steps": [],
+        }]
+    }
+    hourly = {h: [normal_route] for h in range(2, 24)}  # hours 2–23: 35 min each
+    hourly[1] = [outlier_route]                          # hour 1: 269 min (outlier)
+
+    results = traffic.shape_routes([normal_route], hourly, mode="transit")
+    hours_present = [p.hour for p in results[0].hourly_traffic]
+    assert "01:00" not in hours_present          # outlier dropped
+    assert "08:00" in hours_present              # normal hours kept
+    assert len(results[0].hourly_traffic) == 22  # 23 hours minus the outlier
+
+
 def test_shape_transit_no_transit_steps():
     """Route with only walking steps produces empty transit_legs and summary 'Transit'."""
     walking_only = {
