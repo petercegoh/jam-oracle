@@ -33,13 +33,13 @@ export default function SearchForm({ mode, onModeChange, onResult, onError, onLo
   const [submitting, setSubmitting] = useState(false);
 
   async function run(o: string, d: string, oId?: string, dId?: string) {
+    onSearch?.(o, d);
     const cacheKey = `${o.trim().toLowerCase()}|${d.trim().toLowerCase()}|${mode}`;
     const cached = _sessionCache.get(cacheKey);
     if (cached) {
       onResult(cached);
       return;
     }
-    onSearch?.(o, d);
     setSubmitting(true);
     onLoading(true);
     onError("");
