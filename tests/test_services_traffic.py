@@ -87,8 +87,8 @@ def test_shape_routes_reorder_stability():
     assert aye_at_17.duration_minutes == 25.0
 
 
-def test_shape_routes_aggregates_across_hours():
-    """Unique routes appearing in different hourly slots all get their own card."""
+def test_shape_routes_driving_ignores_new_routes_after_anchor():
+    """Driving: routes not present at now_hour are never shown, even if faster at other hours."""
     route_a = {**DIRECTIONS_ROUTE, "summary": "via CTE"}
     route_b = {**DIRECTIONS_ROUTE_B, "summary": "via AYE"}
     route_c = {
@@ -98,7 +98,8 @@ def test_shape_routes_aggregates_across_hours():
         "summary": "via PIE",
     }
 
-    # Hours 5-12: routes A and B only; hours 13-23: routes A, B, and C
+    # now_hour=9 is in range(5, 13): anchor sees only A and B.
+    # PIE appears at hours 13-23 but must never become a card.
     hourly = {}
     for h in range(5, 13):
         hourly[h] = [route_a, route_b]
@@ -108,13 +109,15 @@ def test_shape_routes_aggregates_across_hours():
     results = traffic.shape_routes(hourly, now_hour=NOW)
 
     summaries = {r.summary for r in results}
-    assert summaries == {"via CTE", "via AYE", "via PIE"}
-    assert len(results) == 3
+    assert summaries == {"via CTE", "via AYE"}
+    assert len(results) == 2
+    assert "via PIE" not in summaries
 
-    # PIE only appears in hours 13-23 (11 hours)
-    pie = next(r for r in results if r.summary == "via PIE")
-    assert len(pie.hourly_traffic) == 11
-    assert pie.hourly_traffic[0].hour == "13:00"
+    # Both anchor routes span the full 19-hour window.
+    cte = next(r for r in results if r.summary == "via CTE")
+    aye = next(r for r in results if r.summary == "via AYE")
+    assert len(cte.hourly_traffic) == 19
+    assert len(aye.hourly_traffic) == 19
 
 
 def test_shape_transit_routes_basic():
