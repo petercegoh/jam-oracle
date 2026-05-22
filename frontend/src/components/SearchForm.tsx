@@ -5,6 +5,8 @@ import AddressInput from "./AddressInput";
 import { fetchRoutes } from "@/lib/api";
 import type { Mode, RoutesResponse, Suggestion } from "@/types/api";
 
+const _sessionCache = new Map<string, import("@/types/api").RoutesResponse>();
+
 const PRESETS = [
   { label: "Orchard Rd → Marina Bay", origin: "Orchard Road, Singapore", destination: "Marina Bay, Singapore" },
   { label: "Dhoby Ghaut → Changi Airport", origin: "Dhoby Ghaut, Singapore", destination: "Changi Airport, Singapore" },
@@ -26,11 +28,18 @@ export default function SearchForm({ mode, onResult, onError, onLoading }: Props
   const [submitting, setSubmitting] = useState(false);
 
   async function run(o: string, d: string, oId?: string, dId?: string) {
+    const cacheKey = `${o.trim().toLowerCase()}|${d.trim().toLowerCase()}|${mode}`;
+    const cached = _sessionCache.get(cacheKey);
+    if (cached) {
+      onResult(cached);
+      return;
+    }
     setSubmitting(true);
     onLoading(true);
     onError("");
     try {
       const data = await fetchRoutes(o, d, mode, oId, dId);
+      _sessionCache.set(cacheKey, data);
       onResult(data);
     } catch (err) {
       onError(err instanceof Error ? err.message : "An unexpected error occurred.");

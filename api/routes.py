@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import os
 from datetime import datetime
 
@@ -25,6 +24,10 @@ _cache: TTLCache = TTLCache(maxsize=100, ttl=3600)
 GOOGLE_MAPS_API_KEY: str = os.getenv("GOOGLE_MAPS_API_KEY", "")
 
 
+def _prelim_key(text: str, place_id: str | None) -> str:
+    return f"place_id:{place_id}" if place_id else text.strip().lower()
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -38,6 +41,15 @@ async def suggest(q: str = Query(..., min_length=1)):
 
 @app.post("/api/routes", response_model=RoutesResponse)
 async def get_routes(query: RouteQuery):
+    # Fast-path cache check using normalised inputs — avoids geocoding on cache hits.
+    prelim_cache_key = (
+        _prelim_key(query.origin, query.origin_place_id),
+        _prelim_key(query.destination, query.destination_place_id),
+        query.mode,
+    )
+    if prelim_cache_key in _cache:
+        return _cache[prelim_cache_key]
+
     # Resolve origin — use place_id directly if supplied (no geocoding needed)
     if query.origin_place_id:
         origin = query.origin
@@ -62,9 +74,11 @@ async def get_routes(query: RouteQuery):
         destination_directions = destination
         destination_key = destination
 
-    cache_key = (origin_key, destination_key, query.mode)
-    if cache_key in _cache:
-        return _cache[cache_key]
+    # Check again with resolved keys — catches e.g. same geocoded address reached via different text.
+    resolved_cache_key = (origin_key, destination_key, query.mode)
+    if resolved_cache_key in _cache:
+        _cache[prelim_cache_key] = _cache[resolved_cache_key]
+        return _cache[resolved_cache_key]
 
     hourly_data = await maps.fetch_all_hourly_traffic(
         origin_directions, destination_directions, GOOGLE_MAPS_API_KEY, query.mode
@@ -76,5 +90,6 @@ async def get_routes(query: RouteQuery):
         raise HTTPException(status_code=404, detail="No routes found between these locations")
     response = RoutesResponse(origin=origin, destination=destination, routes=routes)
 
-    _cache[cache_key] = response
+    _cache[prelim_cache_key] = response
+    _cache[resolved_cache_key] = response
     return response

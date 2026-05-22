@@ -85,13 +85,10 @@ async def test_routes_no_routes_found(client, mocker):
 
 
 async def test_routes_cache_hit(client, mocker):
-    """Second identical request must not trigger another fetch_all_hourly_traffic call."""
-    mocker.patch(
+    """Second identical request must not trigger geocoding or fetch_all_hourly_traffic."""
+    validate_mock = mocker.patch(
         "api.routes.maps.validate_address",
-        side_effect=[
-            (True, ORIGIN), (True, DEST),   # first request
-            (True, ORIGIN), (True, DEST),   # second request
-        ],
+        side_effect=[(True, ORIGIN), (True, DEST)],  # only called on first request
     )
     hourly_mock = mocker.patch(
         "api.routes.maps.fetch_all_hourly_traffic", return_value=_HOURLY
@@ -101,6 +98,7 @@ async def test_routes_cache_hit(client, mocker):
     await client.post("/api/routes", json=PAYLOAD)
 
     assert hourly_mock.call_count == 1
+    assert validate_mock.call_count == 2  # zero geocoding calls on second request
 
 
 _TRANSIT_HOURLY = {h: [TRANSIT_ROUTE] for h in range(24)}
