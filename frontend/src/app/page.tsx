@@ -16,12 +16,18 @@ export default function Page() {
   const [result, setResult] = useState<RoutesResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   function switchMode(next: Mode) {
     if (next === mode) return;
     setMode(next);
     setResult(null);
+    setSelectedIndex(null);
     setError("");
+  }
+
+  function handleRouteClick(index: number) {
+    setSelectedIndex((prev) => (prev === index ? null : index));
   }
 
   return (
@@ -63,6 +69,7 @@ export default function Page() {
         mode={mode}
         onResult={(data) => {
           setResult(data);
+          setSelectedIndex(null);
           setError("");
         }}
         onError={setError}
@@ -133,7 +140,7 @@ export default function Page() {
                 <p className="text-xs text-gray-400">Tip: set a departure time in Maps</p>
               </div>
             </div>
-            <TrafficChart routes={result.routes} mode={mode} />
+            <TrafficChart routes={result.routes} mode={mode} selectedIndex={selectedIndex} />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {result.routes.map((route) =>
@@ -142,12 +149,18 @@ export default function Page() {
                   key={route.index}
                   route={route}
                   color={COLORS[route.index]}
+                  selected={selectedIndex === route.index}
+                  dimmed={selectedIndex !== null && selectedIndex !== route.index}
+                  onClick={() => handleRouteClick(route.index)}
                 />
               ) : (
                 <RouteCard
                   key={route.index}
                   route={route}
                   color={COLORS[route.index]}
+                  selected={selectedIndex === route.index}
+                  dimmed={selectedIndex !== null && selectedIndex !== route.index}
+                  onClick={() => handleRouteClick(route.index)}
                 />
               )
             )}
