@@ -10,11 +10,11 @@ interface Props {
 
 const VEHICLE_STYLES: Record<string, { bg: string; text: string }> = {
   SUBWAY: { bg: "bg-blue-100", text: "text-blue-800" },
-  METRO: { bg: "bg-blue-100", text: "text-blue-800" },
-  RAIL: { bg: "bg-green-100", text: "text-green-800" },
-  BUS: { bg: "bg-amber-100", text: "text-amber-800" },
-  TRAM: { bg: "bg-purple-100", text: "text-purple-800" },
-  FERRY: { bg: "bg-teal-100", text: "text-teal-800" },
+  METRO:  { bg: "bg-blue-100", text: "text-blue-800" },
+  RAIL:   { bg: "bg-green-100", text: "text-green-800" },
+  BUS:    { bg: "bg-amber-100", text: "text-amber-800" },
+  TRAM:   { bg: "bg-purple-100", text: "text-purple-800" },
+  FERRY:  { bg: "bg-teal-100", text: "text-teal-800" },
 };
 
 function vehicleStyle(type: string) {
@@ -34,34 +34,38 @@ function LegPill({ leg }: { leg: TransitLeg }) {
   );
 }
 
+function fmtHour(h: string): string {
+  const n = parseInt(h.split(":")[0]);
+  if (n === 0) return "12am";
+  if (n < 12) return `${n}am`;
+  if (n === 12) return "12pm";
+  return `${n - 12}pm`;
+}
+
 export default function TransitCard({ route, color, selected = false, dimmed = false, onClick }: Props) {
+  const routeLabel = String.fromCharCode(65 + route.index);
   const legs = route.transit_legs ?? [];
 
-  const best =
-    route.hourly_traffic.length > 0
-      ? route.hourly_traffic.reduce((a, b) =>
-          a.duration_minutes < b.duration_minutes ? a : b
-        )
-      : null;
-  const worst =
-    route.hourly_traffic.length > 0
-      ? route.hourly_traffic.reduce((a, b) =>
-          a.duration_minutes > b.duration_minutes ? a : b
-        )
-      : null;
+  const peak = route.hourly_traffic.length > 0
+    ? route.hourly_traffic.reduce((a, b) => a.duration_minutes > b.duration_minutes ? a : b)
+    : null;
+  const offPeak = route.hourly_traffic.length > 0
+    ? route.hourly_traffic.reduce((a, b) => a.duration_minutes < b.duration_minutes ? a : b)
+    : null;
 
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer ${dimmed ? "opacity-30" : ""}`}
-      style={{ borderLeftColor: color, borderLeftWidth: 5, boxShadow: selected ? `0 0 0 2px white, 0 0 0 4px ${color}` : undefined }}
+      className={`rounded-xl border border-gray-200 bg-white p-4 cursor-pointer transition-all duration-200 hover:shadow-md ${dimmed ? "opacity-30" : ""}`}
+      style={{ boxShadow: selected ? `0 0 0 2px white, 0 0 0 4px ${color}` : undefined }}
     >
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-semibold" style={{ color }}>
-          Route {route.index + 1}
-        </h3>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: color }} />
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+          Route {routeLabel}
+        </span>
         {route.transfers !== null && (
-          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+          <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
             {route.transfers === 0 ? "Direct" : `${route.transfers} transfer${route.transfers > 1 ? "s" : ""}`}
           </span>
         )}
@@ -77,38 +81,19 @@ export default function TransitCard({ route, color, selected = false, dimmed = f
         <p className="mb-3 text-sm text-gray-400 italic">Walking only</p>
       )}
 
-      <dl className="space-y-1 text-sm border-t border-gray-100 pt-3">
-        <div className="flex justify-between">
-          <dt className="text-gray-500">Distance</dt>
-          <dd className="font-medium">{route.distance}</dd>
-        </div>
-        <div className="flex justify-between">
-          <dt className="text-gray-500">Duration</dt>
-          <dd className="font-medium">{route.duration_current}</dd>
-        </div>
-      </dl>
-
-      {(best || worst) && (
-        <div className="mt-3 border-t border-gray-100 pt-3 space-y-2">
-          {best && (
-            <div className="flex items-center justify-between">
-              <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-                Fastest · {best.hour}
-              </span>
-              <span className="text-sm font-medium">{best.duration_minutes} min</span>
-            </div>
+      {peak && (
+        <>
+          <div className="mb-1">
+            <span className="text-2xl font-bold text-gray-900">{fmtHour(peak.hour)}</span>
+            <span className="ml-1.5 text-sm text-gray-500">peak</span>
+          </div>
+          {offPeak && (
+            <p className="text-sm text-gray-500">
+              {Math.round(peak.duration_minutes)}min peak &middot; {Math.round(offPeak.duration_minutes)}min off-peak
+            </p>
           )}
-          {worst && (
-            <div className="flex items-center justify-between">
-              <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">
-                Slowest · {worst.hour}
-              </span>
-              <span className="text-sm font-medium">{worst.duration_minutes} min</span>
-            </div>
-          )}
-        </div>
+        </>
       )}
-
     </div>
   );
 }
