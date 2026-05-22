@@ -3,9 +3,6 @@ import type { RouteResult, TransitLeg } from "@/types/api";
 interface Props {
   route: RouteResult;
   color: string;
-  selected?: boolean;
-  dimmed?: boolean;
-  onClick?: () => void;
 }
 
 const VEHICLE_STYLES: Record<string, { bg: string; text: string }> = {
@@ -34,7 +31,7 @@ function LegPill({ leg }: { leg: TransitLeg }) {
   );
 }
 
-export default function TransitCard({ route, color, selected = false, dimmed = false, onClick }: Props) {
+export default function TransitCard({ route, color }: Props) {
   const legs = route.transit_legs ?? [];
 
   const best =
@@ -52,9 +49,8 @@ export default function TransitCard({ route, color, selected = false, dimmed = f
 
   return (
     <div
-      onClick={onClick}
-      className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer ${dimmed ? "opacity-30" : ""}`}
-      style={{ borderLeftColor: color, borderLeftWidth: 5, boxShadow: selected ? `0 0 0 2px white, 0 0 0 4px ${color}` : undefined }}
+      className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md"
+      style={{ borderLeftColor: color, borderLeftWidth: 5 }}
     >
       <div className="mb-3 flex items-center justify-between">
         <h3 className="font-semibold" style={{ color }}>
