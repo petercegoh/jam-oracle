@@ -36,7 +36,7 @@ def shape_routes(
     mode: str = "driving",
 ) -> list[RouteResult]:
     results = []
-    for i, route in enumerate(current_routes):
+    for i, route in enumerate(current_routes[:3]):
         leg = route["legs"][0]
 
         hourly_points: list[HourlyDataPoint] = []
