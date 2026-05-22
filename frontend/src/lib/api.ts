@@ -1,6 +1,6 @@
 import type { Mode, RoutesResponse, Suggestion } from "@/types/api";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 export async function fetchRoutes(
   origin: string,
