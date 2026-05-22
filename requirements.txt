@@ -1,9 +1,7 @@
-flask
+fastapi
+uvicorn[standard]
+httpx
+cachetools
+python-dotenv
 requests
-dotenv
-flask_cors
-matplotlib
-python-telegram-bot==20.7
-scipy
-replit
 
