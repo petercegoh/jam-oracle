@@ -58,7 +58,14 @@ async def _fetch_hourly(
 
     resp = await client.get(DIRECTIONS_URL, params=params)
     data = resp.json()
-    return hour, data.get("routes", [])
+    routes = data.get("routes", [])
+
+    if mode == "transit" and routes:
+        actual = routes[0]["legs"][0].get("departure_time", {}).get("value", 0)
+        if actual - int(departure.timestamp()) > 1800:
+            return hour, []
+
+    return hour, routes
 
 
 async def fetch_all_hourly_traffic(

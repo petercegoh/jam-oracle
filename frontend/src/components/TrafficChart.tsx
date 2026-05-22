@@ -21,25 +21,29 @@ interface Props {
   routes: RouteResult[];
 }
 
-export default function TrafficChart({ routes }: Props) {
-  const labels = routes[0].hourly_traffic.map((p) => p.hour);
+const ALL_HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
 
-  const datasets = routes.map((route, i) => ({
-    label: `Route ${route.index + 1} (${route.summary})`,
-    data: route.hourly_traffic.map((p) => p.duration_minutes),
-    borderColor: COLORS[i],
-    backgroundColor: COLORS[i] + "20",
-    tension: 0.4,
-    pointRadius: 0,
-    borderWidth: 2,
-  }));
+export default function TrafficChart({ routes }: Props) {
+  const datasets = routes.map((route, i) => {
+    const byHour = new Map(route.hourly_traffic.map((p) => [p.hour, p.duration_minutes]));
+    return {
+      label: `Route ${route.index + 1} (${route.summary})`,
+      data: ALL_HOURS.map((h) => byHour.get(h) ?? null),
+      borderColor: COLORS[i],
+      backgroundColor: COLORS[i] + "20",
+      tension: 0.4,
+      pointRadius: 0,
+      borderWidth: 2,
+      spanGaps: false,
+    };
+  });
 
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
       <h2 className="mb-3 text-sm font-medium text-gray-600">24-Hour Traffic Forecast</h2>
       <div className="h-72">
         <Line
-          data={{ labels, datasets }}
+          data={{ labels: ALL_HOURS, datasets }}
           options={{
             responsive: true,
             maintainAspectRatio: false,
@@ -48,8 +52,10 @@ export default function TrafficChart({ routes }: Props) {
               legend: { position: "top" },
               tooltip: {
                 callbacks: {
-                  label: (ctx) =>
-                    ` ${ctx.dataset.label?.split(" (")[0]}: ${ctx.parsed.y} min`,
+                  label: (ctx) => {
+                    if (ctx.parsed.y === null) return;
+                    return ` ${ctx.dataset.label?.split(" (")[0]}: ${ctx.parsed.y} min`;
+                  },
                 },
               },
             },

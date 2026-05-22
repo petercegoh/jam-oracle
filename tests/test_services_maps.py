@@ -3,7 +3,7 @@ import respx
 
 from services import maps
 from services.maps import GEOCODING_URL, PLACES_URL, DIRECTIONS_URL
-from tests.conftest import GEOCODE_OK, GEOCODE_FAIL, PLACES_OK, PLACES_FAIL, DIRECTIONS_OK
+from tests.conftest import GEOCODE_OK, GEOCODE_FAIL, PLACES_OK, PLACES_FAIL, DIRECTIONS_OK, TRANSIT_ROUTE
 
 API_KEY = "fake-key"
 
@@ -59,3 +59,42 @@ async def test_fetch_current_routes_returns_routes():
     routes = await maps.fetch_current_routes("Origin, SG", "Dest, SG", API_KEY)
     assert len(routes) == 1
     assert routes[0]["summary"] == "Orchard Road"
+
+
+@respx.mock
+async def test_fetch_hourly_transit_skips_no_service_hours():
+    """Transit hours where actual departure is >30 min later than requested return empty."""
+    no_service_route = {
+        **TRANSIT_ROUTE,
+        "legs": [{
+            **TRANSIT_ROUTE["legs"][0],
+            # Year 2286 — guaranteed > 30 min after any requested departure time
+            "departure_time": {"value": 9_999_999_999},
+        }],
+    }
+    respx.get(DIRECTIONS_URL).mock(
+        return_value=httpx.Response(200, json={"routes": [no_service_route]})
+    )
+    result = await maps.fetch_all_hourly_traffic("O, SG", "D, SG", API_KEY, mode="transit")
+    assert len(result) == 24
+    assert all(routes == [] for routes in result.values())
+
+
+@respx.mock
+async def test_fetch_hourly_transit_within_threshold_passes():
+    """Transit routes whose departure is within 30 min of requested time are kept."""
+    import time
+    on_time_route = {
+        **TRANSIT_ROUTE,
+        "legs": [{
+            **TRANSIT_ROUTE["legs"][0],
+            # 10 minutes from now — well within the 30-min threshold
+            "departure_time": {"value": int(time.time()) + 600},
+        }],
+    }
+    respx.get(DIRECTIONS_URL).mock(
+        return_value=httpx.Response(200, json={"routes": [on_time_route]})
+    )
+    result = await maps.fetch_all_hourly_traffic("O, SG", "D, SG", API_KEY, mode="transit")
+    # Routes within threshold should be kept (not filtered out)
+    assert any(routes != [] for routes in result.values())
