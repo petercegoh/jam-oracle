@@ -1,6 +1,17 @@
+export type Mode = "driving" | "transit";
+
 export interface HourlyDataPoint {
   hour: string;
   duration_minutes: number;
+}
+
+export interface TransitLeg {
+  line_name: string;
+  short_name: string;
+  vehicle_type: string;
+  num_stops: number;
+  departure_stop: string;
+  arrival_stop: string;
 }
 
 export interface RouteResult {
@@ -10,6 +21,8 @@ export interface RouteResult {
   duration_current: string;
   duration_typical: string;
   hourly_traffic: HourlyDataPoint[];
+  transit_legs: TransitLeg[] | null;
+  transfers: number | null;
 }
 
 export interface RoutesResponse {

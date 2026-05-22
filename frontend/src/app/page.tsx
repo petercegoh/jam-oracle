@@ -4,16 +4,25 @@ import { useState } from "react";
 import SearchForm from "@/components/SearchForm";
 import TrafficChart from "@/components/TrafficChart";
 import RouteCard from "@/components/RouteCard";
+import TransitCard from "@/components/TransitCard";
 import SkeletonChart from "@/components/SkeletonChart";
 import SkeletonCard from "@/components/SkeletonCard";
-import type { RoutesResponse } from "@/types/api";
+import type { Mode, RoutesResponse } from "@/types/api";
 
 const COLORS = ["#3B82F6", "#22C55E", "#EF4444"];
 
 export default function Page() {
+  const [mode, setMode] = useState<Mode>("driving");
   const [result, setResult] = useState<RoutesResponse | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function switchMode(next: Mode) {
+    if (next === mode) return;
+    setMode(next);
+    setResult(null);
+    setError("");
+  }
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10">
@@ -27,7 +36,31 @@ export default function Page() {
         </p>
       </header>
 
+      <div className="mb-5 flex w-fit rounded-lg border border-gray-200 bg-gray-50 p-1">
+        <button
+          onClick={() => switchMode("driving")}
+          className={`flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            mode === "driving"
+              ? "bg-white shadow-sm text-gray-900"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          🚗 Drive
+        </button>
+        <button
+          onClick={() => switchMode("transit")}
+          className={`flex items-center gap-1.5 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            mode === "transit"
+              ? "bg-white shadow-sm text-gray-900"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          🚌 Transit
+        </button>
+      </div>
+
       <SearchForm
+        mode={mode}
         onResult={(data) => {
           setResult(data);
           setError("");
@@ -72,7 +105,7 @@ export default function Page() {
 
       {result && (
         <div
-          key={result.origin + result.destination}
+          key={result.origin + result.destination + mode}
           className="animate-fade-in mt-8 flex flex-col gap-6"
         >
           <div>
@@ -82,15 +115,25 @@ export default function Page() {
             <TrafficChart routes={result.routes} />
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            {result.routes.map((route) => (
-              <RouteCard
-                key={route.index}
-                route={route}
-                color={COLORS[route.index]}
-                origin={result.origin}
-                destination={result.destination}
-              />
-            ))}
+            {result.routes.map((route) =>
+              mode === "transit" ? (
+                <TransitCard
+                  key={route.index}
+                  route={route}
+                  color={COLORS[route.index]}
+                  origin={result.origin}
+                  destination={result.destination}
+                />
+              ) : (
+                <RouteCard
+                  key={route.index}
+                  route={route}
+                  color={COLORS[route.index]}
+                  origin={result.origin}
+                  destination={result.destination}
+                />
+              )
+            )}
           </div>
         </div>
       )}

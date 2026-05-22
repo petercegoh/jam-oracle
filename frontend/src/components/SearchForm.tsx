@@ -3,15 +3,16 @@
 import { useState } from "react";
 import AddressInput from "./AddressInput";
 import { fetchRoutes } from "@/lib/api";
-import type { RoutesResponse } from "@/types/api";
+import type { Mode, RoutesResponse } from "@/types/api";
 
 interface Props {
+  mode: Mode;
   onResult: (data: RoutesResponse) => void;
   onError: (msg: string) => void;
   onLoading: (v: boolean) => void;
 }
 
-export default function SearchForm({ onResult, onError, onLoading }: Props) {
+export default function SearchForm({ mode, onResult, onError, onLoading }: Props) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -23,7 +24,7 @@ export default function SearchForm({ onResult, onError, onLoading }: Props) {
     onLoading(true);
     onError("");
     try {
-      const data = await fetchRoutes(origin, destination);
+      const data = await fetchRoutes(origin, destination, mode);
       onResult(data);
     } catch (err) {
       onError(err instanceof Error ? err.message : "An unexpected error occurred.");

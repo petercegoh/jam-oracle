@@ -1,15 +1,16 @@
-import type { RoutesResponse } from "@/types/api";
+import type { Mode, RoutesResponse } from "@/types/api";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export async function fetchRoutes(
   origin: string,
-  destination: string
+  destination: string,
+  mode: Mode = "driving"
 ): Promise<RoutesResponse> {
   const res = await fetch(`${BASE}/api/routes`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ origin, destination }),
+    body: JSON.stringify({ origin, destination, mode }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
