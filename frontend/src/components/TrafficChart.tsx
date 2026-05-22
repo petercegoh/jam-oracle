@@ -30,12 +30,14 @@ export default function TrafficChart({ routes, mode, selectedIndex }: Props) {
   const datasets = visibleRoutes.map((route) => {
     const byHour = new Map(route.hourly_traffic.map((p) => [p.hour, p.duration_minutes]));
     const data = ALL_HOURS.map((h) => byHour.get(h) ?? null);
-    const pointRadius = data.map((v, idx) => {
-      if (v === null) return 0;
-      const prevNull = idx === 0 || data[idx - 1] === null;
-      const nextNull = idx === data.length - 1 || data[idx + 1] === null;
-      return prevNull && nextNull ? 5 : 0;
-    });
+    const pointRadius = mode === "driving"
+      ? 0
+      : data.map((v, idx) => {
+          if (v === null) return 0;
+          const prevNull = idx === 0 || data[idx - 1] === null;
+          const nextNull = idx === data.length - 1 || data[idx + 1] === null;
+          return prevNull && nextNull ? 5 : 0;
+        });
     return {
       label: `Route ${route.index + 1} (${route.summary})`,
       data,
