@@ -142,6 +142,7 @@ export default function Page() {
             </div>
             <TrafficChart routes={result.routes} mode={mode} selectedIndex={selectedIndex} />
           </div>
+          <p className="text-xs text-gray-400">Tip: highlight a route by clicking on a card</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {result.routes.map((route) =>
               mode === "transit" ? (

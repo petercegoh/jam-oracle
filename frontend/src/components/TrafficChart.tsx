@@ -61,7 +61,7 @@ export default function TrafficChart({ routes, mode, selectedIndex }: Props) {
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             plugins: {
-              legend: { position: "top" },
+              legend: { position: "top", onClick: () => {} },
               tooltip: {
                 callbacks: {
                   label: (ctx) => {
