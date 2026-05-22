@@ -3,9 +3,12 @@ import type { RouteResult } from "@/types/api";
 interface Props {
   route: RouteResult;
   color: string;
+  selected?: boolean;
+  dimmed?: boolean;
+  onClick?: () => void;
 }
 
-export default function RouteCard({ route, color }: Props) {
+export default function RouteCard({ route, color, selected = false, dimmed = false, onClick }: Props) {
   const best = route.hourly_traffic.reduce((a, b) =>
     a.duration_minutes < b.duration_minutes ? a : b
   );
@@ -15,8 +18,9 @@ export default function RouteCard({ route, color }: Props) {
 
   return (
     <div
-      className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md"
-      style={{ borderLeftColor: color, borderLeftWidth: 5 }}
+      onClick={onClick}
+      className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md cursor-pointer ${dimmed ? "opacity-30" : ""}`}
+      style={{ borderLeftColor: color, borderLeftWidth: 5, boxShadow: selected ? `0 0 0 2px white, 0 0 0 4px ${color}` : undefined }}
     >
       <h3 className="mb-1 font-semibold text-gray-900" style={{ color }}>
         Route {route.index + 1}
