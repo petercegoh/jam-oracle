@@ -46,12 +46,16 @@ async function fetchHourly(
   hour: number,
   apiKey: string,
   mode: string,
+  tzOffsetMinutes: number,
 ): Promise<[number, GoogleRoute[]]> {
-  const now = new Date();
-  const departure = new Date(now);
-  departure.setHours(hour, 0, 0, 0);
-  if (departure < now) departure.setDate(departure.getDate() + 1);
-  const departureTime = Math.floor(departure.getTime() / 1000);
+  // Compute Unix timestamp for `hour:00` in the client's local timezone.
+  // tzOffsetMinutes = getTimezoneOffset() — positive for west, negative for east (e.g. SGT = -480).
+  const nowMs = Date.now();
+  const localNowMs = nowMs - tzOffsetMinutes * 60_000;
+  const midnightLocalMs = Math.floor(localNowMs / 86_400_000) * 86_400_000;
+  const targetUtcMs = midnightLocalMs + hour * 3_600_000 + tzOffsetMinutes * 60_000;
+  const departureMs = targetUtcMs < nowMs ? targetUtcMs + 86_400_000 : targetUtcMs;
+  const departureTime = Math.floor(departureMs / 1000);
 
   const url = new URL(DIRECTIONS_URL);
   url.searchParams.set("origin", origin);
@@ -79,10 +83,11 @@ export async function fetchAllHourlyTraffic(
   destination: string,
   apiKey: string,
   mode: string = "driving",
+  tzOffsetMinutes: number = 0,
 ): Promise<Record<number, GoogleRoute[]>> {
   const hours = Array.from({ length: 19 }, (_, i) => i + 5); // 5..23
   const results = await Promise.all(
-    hours.map((hour) => fetchHourly(origin, destination, hour, apiKey, mode)),
+    hours.map((hour) => fetchHourly(origin, destination, hour, apiKey, mode, tzOffsetMinutes)),
   );
   return Object.fromEntries(results);
 }

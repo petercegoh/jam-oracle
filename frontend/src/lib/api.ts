@@ -17,6 +17,7 @@ export async function fetchRoutes(
       destination,
       mode,
       now_hour: new Date().getHours(),
+      tz_offset: new Date().getTimezoneOffset(),
       ...(originPlaceId && { origin_place_id: originPlaceId }),
       ...(destinationPlaceId && { destination_place_id: destinationPlaceId }),
     }),

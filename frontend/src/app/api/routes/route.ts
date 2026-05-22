@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     destination,
     mode = "driving",
     now_hour,
+    tz_offset = 0,
     origin_place_id,
     destination_place_id,
   } = body as {
@@ -26,6 +27,7 @@ export async function POST(request: NextRequest) {
     destination: string;
     mode?: string;
     now_hour?: number;
+    tz_offset?: number;
     origin_place_id?: string;
     destination_place_id?: string;
   };
@@ -104,6 +106,7 @@ export async function POST(request: NextRequest) {
     destinationDirections,
     apiKey,
     mode,
+    tz_offset,
   );
 
   const nowHour = Math.max(5, Math.min(23, now_hour ?? new Date().getHours()));
