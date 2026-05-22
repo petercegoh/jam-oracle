@@ -11,6 +11,7 @@ interface Props {
   onSelect: (suggestion: Suggestion) => void;
   placeholder?: string;
   disabled?: boolean;
+  variant?: "default" | "minimal";
 }
 
 export default function AddressInput({
@@ -20,6 +21,7 @@ export default function AddressInput({
   onSelect,
   placeholder,
   disabled = false,
+  variant = "default",
 }: Props) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [fetching, setFetching] = useState(false);
@@ -73,6 +75,39 @@ export default function AddressInput({
     document.addEventListener("mousedown", onMouseDown);
     return () => document.removeEventListener("mousedown", onMouseDown);
   }, []);
+
+  if (variant === "minimal") {
+    return (
+      <div ref={containerRef} className="relative w-full">
+        <input
+          type="text"
+          aria-label={label}
+          value={value}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="w-full bg-transparent text-sm text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
+        />
+        {suggestions.length > 0 && (
+          <ul className="absolute top-full left-0 z-20 mt-1 w-72 rounded-xl border border-gray-200 bg-white shadow-lg">
+            {suggestions.map((s, i) => (
+              <li
+                key={s.place_id}
+                onMouseDown={() => handleSelect(s)}
+                aria-selected={i === selectedIndex}
+                className={`cursor-pointer px-3 py-2 text-sm ${
+                  i === selectedIndex ? "bg-blue-50 text-blue-900" : "hover:bg-gray-50"
+                }`}
+              >
+                {s.description}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="relative flex flex-col gap-1">
