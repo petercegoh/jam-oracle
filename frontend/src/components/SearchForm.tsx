@@ -20,11 +20,14 @@ interface Props {
   onResult: (data: RoutesResponse) => void;
   onError: (msg: string) => void;
   onLoading: (v: boolean) => void;
+  onSearch?: (origin: string, destination: string) => void;
+  initialOrigin?: string;
+  initialDestination?: string;
 }
 
-export default function SearchForm({ mode, onModeChange, onResult, onError, onLoading }: Props) {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+export default function SearchForm({ mode, onModeChange, onResult, onError, onLoading, onSearch, initialOrigin, initialDestination }: Props) {
+  const [origin, setOrigin] = useState(initialOrigin ?? "");
+  const [destination, setDestination] = useState(initialDestination ?? "");
   const [originPlaceId, setOriginPlaceId] = useState<string | null>(null);
   const [destinationPlaceId, setDestinationPlaceId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +39,7 @@ export default function SearchForm({ mode, onModeChange, onResult, onError, onLo
       onResult(cached);
       return;
     }
+    onSearch?.(o, d);
     setSubmitting(true);
     onLoading(true);
     onError("");

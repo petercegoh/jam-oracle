@@ -30,6 +30,7 @@ export default function Page() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [lastSearch, setLastSearch] = useState<{ origin: string; destination: string } | null>(null);
 
   const showLanding = !result && !loading;
 
@@ -75,6 +76,9 @@ export default function Page() {
               onResult={(data) => { setResult(data); setSelectedIndex(null); setError(""); }}
               onError={setError}
               onLoading={setLoading}
+              onSearch={(o, d) => setLastSearch({ origin: o, destination: d })}
+              initialOrigin={lastSearch?.origin}
+              initialDestination={lastSearch?.destination}
             />
           </div>
           {error && !loading && (
