@@ -80,20 +80,3 @@ async def fetch_all_hourly_traffic(
     return {hour: routes for hour, routes in results}
 
 
-async def fetch_current_routes(
-    origin: str, destination: str, api_key: str, mode: str = "driving"
-) -> list[dict]:
-    params: dict = {
-        "origin": origin,
-        "destination": destination,
-        "key": api_key,
-        "mode": mode,
-        "alternatives": "true",
-    }
-    if mode == "driving":
-        params["departure_time"] = "now"
-        params["traffic_model"] = "best_guess"
-
-    async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.get(DIRECTIONS_URL, params=params)
-    return resp.json().get("routes", [])

@@ -31,7 +31,6 @@ def _transit_summary(transit_legs: list[TransitLeg]) -> str:
 
 
 def _route_key(route: dict, mode: str) -> str:
-    """Stable identity string for a route used to match it across hourly slots."""
     if mode == "transit":
         names = []
         for step in route["legs"][0].get("steps", []):
@@ -44,62 +43,88 @@ def _route_key(route: dict, mode: str) -> str:
 
 
 def shape_routes(
-    current_routes: list[dict],
     hourly_data: dict[int, list[dict]],
     mode: str = "driving",
+    now_hour: int = 9,
 ) -> list[RouteResult]:
+    # Aggregate all unique routes across every hourly slot.
+    # unique[key] = {"rep": route_dict, "by_hour": {hour: (duration_min, duration_text)}}
+    unique: dict[str, dict] = {}
+
+    for hour in range(5, 24):
+        for route in hourly_data.get(hour, [])[:3]:
+            key = _route_key(route, mode)
+            if key not in unique:
+                unique[key] = {"rep": route, "by_hour": {}}
+            leg = route["legs"][0]
+            if mode == "driving":
+                raw = leg.get("duration_in_traffic", leg["duration"])
+            else:
+                raw = leg["duration"]
+            unique[key]["by_hour"][hour] = (round(raw["value"] / 60, 1), raw["text"])
+
     results = []
-    for i, route in enumerate(current_routes[:3]):
-        leg = route["legs"][0]
-        anchor_key = _route_key(route, mode)
+    for key, data in unique.items():
+        rep = data["rep"]
+        rep_leg = rep["legs"][0]
+        by_hour = data["by_hour"]
 
-        hourly_points: list[HourlyDataPoint] = []
-        for hour in range(5, 24):
-            routes_at_hour = hourly_data.get(hour, [])
-            matched = next(
-                (r for r in routes_at_hour if _route_key(r, mode) == anchor_key),
-                None,
-            )
-            if matched:
-                hour_leg = matched["legs"][0]
-                if mode == "driving":
-                    raw = hour_leg.get("duration_in_traffic", hour_leg["duration"])
-                else:
-                    raw = hour_leg["duration"]
-                duration_minutes = round(raw["value"] / 60, 1)
-                hourly_points.append(
-                    HourlyDataPoint(hour=f"{hour:02d}:00", duration_minutes=duration_minutes)
-                )
+        hourly_points = [
+            HourlyDataPoint(hour=f"{h:02d}:00", duration_minutes=mins)
+            for h, (mins, _) in sorted(by_hour.items())
+        ]
 
+        # Transit outlier filter: drop hours where duration > 3x the route minimum.
         if mode == "transit" and len(hourly_points) > 1:
             min_dur = min(p.duration_minutes for p in hourly_points)
-            hourly_points = [p for p in hourly_points if p.duration_minutes <= min_dur * 3]
+            kept = {int(p.hour.split(":")[0]) for p in hourly_points if p.duration_minutes <= min_dur * 3}
+            hourly_points = [p for p in hourly_points if int(p.hour.split(":")[0]) in kept]
+            by_hour = {h: v for h, v in by_hour.items() if h in kept}
+
+        # duration_current from the nearest available hour to now.
+        if by_hour:
+            closest = min(by_hour.keys(), key=lambda h: abs(h - now_hour))
+            _, duration_current = by_hour[closest]
+        else:
+            duration_current = "—"
+
+        duration_typical = rep_leg["duration"]["text"]
 
         if mode == "transit":
-            transit_legs = _extract_transit_legs(route)
+            transit_legs = _extract_transit_legs(rep)
             summary = _transit_summary(transit_legs)
-            results.append(
-                RouteResult(
-                    index=i,
-                    summary=summary,
-                    distance=leg["distance"]["text"],
-                    duration_current=leg["duration"]["text"],
-                    duration_typical=leg["duration"]["text"],
-                    hourly_traffic=hourly_points,
-                    transit_legs=transit_legs,
-                    transfers=max(0, len(transit_legs) - 1),
-                )
-            )
+            results.append(RouteResult(
+                index=0,
+                summary=summary,
+                distance=rep_leg["distance"]["text"],
+                duration_current=duration_current,
+                duration_typical=duration_typical,
+                hourly_traffic=hourly_points,
+                transit_legs=transit_legs,
+                transfers=max(0, len(transit_legs) - 1),
+            ))
         else:
-            results.append(
-                RouteResult(
-                    index=i,
-                    summary=route.get("summary", f"Route {i + 1}"),
-                    distance=leg["distance"]["text"],
-                    duration_current=leg.get("duration_in_traffic", leg["duration"])["text"],
-                    duration_typical=leg["duration"]["text"],
-                    hourly_traffic=hourly_points,
-                )
-            )
+            results.append(RouteResult(
+                index=0,
+                summary=rep.get("summary", "Route"),
+                distance=rep_leg["distance"]["text"],
+                duration_current=duration_current,
+                duration_typical=duration_typical,
+                hourly_traffic=hourly_points,
+            ))
+
+    # Sort by duration at now_hour (ascending); fall back to average.
+    def _sort_key(r: RouteResult) -> float:
+        now_label = f"{now_hour:02d}:00"
+        pt = next((p for p in r.hourly_traffic if p.hour == now_label), None)
+        if pt:
+            return pt.duration_minutes
+        if r.hourly_traffic:
+            return sum(p.duration_minutes for p in r.hourly_traffic) / len(r.hourly_traffic)
+        return float("inf")
+
+    results.sort(key=_sort_key)
+    for i, r in enumerate(results):
+        r.index = i
 
     return results

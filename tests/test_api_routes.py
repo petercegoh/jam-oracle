@@ -38,7 +38,6 @@ async def test_suggest_empty_query_rejected(client):
 
 async def test_routes_success(client, mocker):
     _patch_valid_addresses(mocker)
-    mocker.patch("api.routes.maps.fetch_current_routes", return_value=[DIRECTIONS_ROUTE])
     mocker.patch("api.routes.maps.fetch_all_hourly_traffic", return_value=_HOURLY)
 
     resp = await client.post("/api/routes", json=PAYLOAD)
@@ -73,8 +72,7 @@ async def test_routes_invalid_destination(client, mocker):
 
 async def test_routes_no_routes_found(client, mocker):
     _patch_valid_addresses(mocker)
-    mocker.patch("api.routes.maps.fetch_current_routes", return_value=[])
-    mocker.patch("api.routes.maps.fetch_all_hourly_traffic", return_value=_HOURLY)
+    mocker.patch("api.routes.maps.fetch_all_hourly_traffic", return_value={h: [] for h in range(5, 24)})
 
     resp = await client.post("/api/routes", json=PAYLOAD)
     assert resp.status_code == 404
@@ -89,7 +87,6 @@ async def test_routes_cache_hit(client, mocker):
             (True, ORIGIN), (True, DEST),   # second request
         ],
     )
-    mocker.patch("api.routes.maps.fetch_current_routes", return_value=[DIRECTIONS_ROUTE])
     hourly_mock = mocker.patch(
         "api.routes.maps.fetch_all_hourly_traffic", return_value=_HOURLY
     )
@@ -107,7 +104,6 @@ TRANSIT_PAYLOAD = {"origin": "orchard", "destination": "mbs", "mode": "transit"}
 async def test_routes_transit_success(client, mocker):
     """Transit mode returns transit_legs, transfers, and uses duration not duration_in_traffic."""
     _patch_valid_addresses(mocker)
-    mocker.patch("api.routes.maps.fetch_current_routes", return_value=[TRANSIT_ROUTE])
     mocker.patch("api.routes.maps.fetch_all_hourly_traffic", return_value=_TRANSIT_HOURLY)
 
     resp = await client.post("/api/routes", json=TRANSIT_PAYLOAD)
@@ -130,10 +126,6 @@ async def test_routes_transit_cache_separate_from_driving(client, mocker):
             (True, ORIGIN), (True, DEST),   # driving request
             (True, ORIGIN), (True, DEST),   # transit request
         ],
-    )
-    mocker.patch(
-        "api.routes.maps.fetch_current_routes",
-        side_effect=[[DIRECTIONS_ROUTE], [TRANSIT_ROUTE]],
     )
     hourly_mock = mocker.patch(
         "api.routes.maps.fetch_all_hourly_traffic",

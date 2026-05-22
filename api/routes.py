@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from datetime import datetime
 
 from cachetools import TTLCache
 from fastapi import FastAPI, HTTPException, Query
@@ -51,15 +52,14 @@ async def get_routes(query: RouteQuery):
     if cache_key in _cache:
         return _cache[cache_key]
 
-    current_routes, hourly_data = await asyncio.gather(
-        maps.fetch_current_routes(origin, destination, GOOGLE_MAPS_API_KEY, query.mode),
-        maps.fetch_all_hourly_traffic(origin, destination, GOOGLE_MAPS_API_KEY, query.mode),
+    hourly_data = await maps.fetch_all_hourly_traffic(
+        origin, destination, GOOGLE_MAPS_API_KEY, query.mode
     )
+    now_hour = max(5, min(23, datetime.now().hour))
+    routes = traffic.shape_routes(hourly_data, query.mode, now_hour)
 
-    if not current_routes:
+    if not routes:
         raise HTTPException(status_code=404, detail="No routes found between these locations")
-
-    routes = traffic.shape_routes(current_routes, hourly_data, query.mode)
     response = RoutesResponse(origin=origin, destination=destination, routes=routes)
 
     _cache[cache_key] = response

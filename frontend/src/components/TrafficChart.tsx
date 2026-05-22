@@ -15,7 +15,7 @@ import type { RouteResult } from "@/types/api";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-const COLORS = ["#3B82F6", "#22C55E", "#EF4444"];
+const COLORS = ["#3B82F6", "#22C55E", "#EF4444", "#F59E0B", "#8B5CF6", "#EC4899"];
 
 interface Props {
   routes: RouteResult[];

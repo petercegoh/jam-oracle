@@ -9,7 +9,7 @@ import SkeletonChart from "@/components/SkeletonChart";
 import SkeletonCard from "@/components/SkeletonCard";
 import type { Mode, RoutesResponse } from "@/types/api";
 
-const COLORS = ["#3B82F6", "#22C55E", "#EF4444"];
+const COLORS = ["#3B82F6", "#22C55E", "#EF4444", "#F59E0B", "#8B5CF6", "#EC4899"];
 
 export default function Page() {
   const [mode, setMode] = useState<Mode>("driving");
@@ -114,7 +114,7 @@ export default function Page() {
             </p>
             <TrafficChart routes={result.routes} />
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {result.routes.map((route) =>
               mode === "transit" ? (
                 <TransitCard

@@ -54,14 +54,6 @@ async def test_fetch_all_hourly_traffic_24_calls():
 
 
 @respx.mock
-async def test_fetch_current_routes_returns_routes():
-    respx.get(DIRECTIONS_URL).mock(return_value=httpx.Response(200, json=DIRECTIONS_OK))
-    routes = await maps.fetch_current_routes("Origin, SG", "Dest, SG", API_KEY)
-    assert len(routes) == 1
-    assert routes[0]["summary"] == "Orchard Road"
-
-
-@respx.mock
 async def test_fetch_hourly_transit_skips_no_service_hours():
     """Transit hours where actual departure is >30 min later than requested return empty."""
     no_service_route = {
