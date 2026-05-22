@@ -1,5 +1,5 @@
 from services import traffic
-from tests.conftest import DIRECTIONS_ROUTE, DIRECTIONS_ROUTE_NO_TRAFFIC, TRANSIT_ROUTE
+from tests.conftest import DIRECTIONS_ROUTE, DIRECTIONS_ROUTE_B, DIRECTIONS_ROUTE_NO_TRAFFIC, TRANSIT_ROUTE
 
 
 def _hourly(route, hours=range(24)):
@@ -39,17 +39,52 @@ def test_shape_routes_gap_in_hourly_data():
 
 
 def test_shape_routes_route_missing_at_hour():
-    """If a route index is absent at a specific hour, that hour is skipped for that route."""
+    """If an anchor route has no summary match at a specific hour, that hour is skipped."""
     hourly = {}
-    for h in range(24):
-        # Route index 1 is missing at hour 5
-        hourly[h] = [DIRECTIONS_ROUTE] if h == 5 else [DIRECTIONS_ROUTE, DIRECTIONS_ROUTE]
+    for h in range(5, 24):
+        # DIRECTIONS_ROUTE_B (Marina Boulevard) missing at hour 5
+        hourly[h] = [DIRECTIONS_ROUTE] if h == 5 else [DIRECTIONS_ROUTE, DIRECTIONS_ROUTE_B]
 
-    results = traffic.shape_routes([DIRECTIONS_ROUTE, DIRECTIONS_ROUTE], hourly)
-    assert len(results[0].hourly_traffic) == 19          # route 0 always present (hours 5–23)
-    assert len(results[1].hourly_traffic) == 18          # route 1 missing hour 5
-    hours_in_route_1 = [pt.hour for pt in results[1].hourly_traffic]
-    assert "05:00" not in hours_in_route_1
+    results = traffic.shape_routes([DIRECTIONS_ROUTE, DIRECTIONS_ROUTE_B], hourly)
+    assert len(results[0].hourly_traffic) == 19          # Orchard Road always present
+    assert len(results[1].hourly_traffic) == 18          # Marina Boulevard missing hour 5
+    hours_in_route_b = [pt.hour for pt in results[1].hourly_traffic]
+    assert "05:00" not in hours_in_route_b
+
+
+def test_shape_routes_reorder_stability():
+    """Chart lines stay consistent when Google reorders routes between hours."""
+    route_cte = {
+        "legs": [{"distance": {"text": "5 km", "value": 5000},
+                  "duration": {"text": "10 mins", "value": 600},
+                  "duration_in_traffic": {"text": "14 mins", "value": 840}}],
+        "summary": "via CTE",
+    }
+    route_aye = {
+        "legs": [{"distance": {"text": "7 km", "value": 7000},
+                  "duration": {"text": "12 mins", "value": 720},
+                  "duration_in_traffic": {"text": "25 mins", "value": 1500}}],
+        "summary": "via AYE",
+    }
+
+    # Most hours: CTE first, AYE second
+    normal = [route_cte, route_aye]
+    # Hour 17: Google flips order — AYE is faster at rush hour
+    reordered = [route_aye, route_cte]
+
+    hourly = {h: normal for h in range(5, 24)}
+    hourly[17] = reordered
+
+    results = traffic.shape_routes([route_cte, route_aye], hourly)
+
+    assert len(results[0].hourly_traffic) == 19   # CTE: all hours covered
+    assert len(results[1].hourly_traffic) == 19   # AYE: all hours covered
+
+    cte_at_17 = next(p for p in results[0].hourly_traffic if p.hour == "17:00")
+    aye_at_17 = next(p for p in results[1].hourly_traffic if p.hour == "17:00")
+    # CTE line must show CTE's value (840s → 14 min), not AYE's (1500s → 25 min)
+    assert cte_at_17.duration_minutes == 14.0
+    assert aye_at_17.duration_minutes == 25.0
 
 
 def test_shape_transit_routes_basic():

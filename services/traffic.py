@@ -30,6 +30,19 @@ def _transit_summary(transit_legs: list[TransitLeg]) -> str:
     return " → ".join(leg.short_name for leg in transit_legs)
 
 
+def _route_key(route: dict, mode: str) -> str:
+    """Stable identity string for a route used to match it across hourly slots."""
+    if mode == "transit":
+        names = []
+        for step in route["legs"][0].get("steps", []):
+            if step.get("travel_mode") != "TRANSIT":
+                continue
+            short = step.get("transit_details", {}).get("line", {}).get("short_name", "")
+            names.append(short)
+        return "-".join(names)
+    return route.get("summary", "").strip().lower()
+
+
 def shape_routes(
     current_routes: list[dict],
     hourly_data: dict[int, list[dict]],
@@ -38,12 +51,17 @@ def shape_routes(
     results = []
     for i, route in enumerate(current_routes[:3]):
         leg = route["legs"][0]
+        anchor_key = _route_key(route, mode)
 
         hourly_points: list[HourlyDataPoint] = []
         for hour in range(5, 24):
             routes_at_hour = hourly_data.get(hour, [])
-            if i < len(routes_at_hour):
-                hour_leg = routes_at_hour[i]["legs"][0]
+            matched = next(
+                (r for r in routes_at_hour if _route_key(r, mode) == anchor_key),
+                None,
+            )
+            if matched:
+                hour_leg = matched["legs"][0]
                 if mode == "driving":
                     raw = hour_leg.get("duration_in_traffic", hour_leg["duration"])
                 else:

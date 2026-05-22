@@ -43,6 +43,16 @@ DIRECTIONS_ROUTE_NO_TRAFFIC = {
     ],
     "summary": "Orchard Road",
 }
+DIRECTIONS_ROUTE_B = {
+    "legs": [
+        {
+            "distance": {"text": "8 km", "value": 8000},
+            "duration": {"text": "12 mins", "value": 720},
+            "duration_in_traffic": {"text": "25 mins", "value": 1500},
+        }
+    ],
+    "summary": "Marina Boulevard",
+}
 DIRECTIONS_OK = {"routes": [DIRECTIONS_ROUTE]}
 DIRECTIONS_EMPTY = {"routes": []}
 
