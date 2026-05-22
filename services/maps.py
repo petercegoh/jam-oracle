@@ -74,7 +74,7 @@ async def fetch_all_hourly_traffic(
     async with httpx.AsyncClient(timeout=30) as client:
         tasks = [
             _fetch_hourly(client, origin, destination, hour, api_key, mode)
-            for hour in range(24)
+            for hour in range(5, 24)
         ]
         results = await asyncio.gather(*tasks)
     return {hour: routes for hour, routes in results}

@@ -21,7 +21,7 @@ interface Props {
   routes: RouteResult[];
 }
 
-const ALL_HOURS = Array.from({ length: 24 }, (_, i) => `${String(i).padStart(2, "0")}:00`);
+const ALL_HOURS = Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart(2, "0")}:00`);
 
 export default function TrafficChart({ routes }: Props) {
   const datasets = routes.map((route, i) => {

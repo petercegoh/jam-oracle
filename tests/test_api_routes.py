@@ -48,7 +48,7 @@ async def test_routes_success(client, mocker):
     assert body["destination"] == DEST
     assert len(body["routes"]) == 1
     assert body["routes"][0]["summary"] == "Orchard Road"
-    assert len(body["routes"][0]["hourly_traffic"]) == 24
+    assert len(body["routes"][0]["hourly_traffic"]) == 19
 
 
 async def test_routes_invalid_origin(client, mocker):

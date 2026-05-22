@@ -46,11 +46,11 @@ async def test_fetch_all_hourly_traffic_24_calls():
         return_value=httpx.Response(200, json=DIRECTIONS_OK)
     )
     result = await maps.fetch_all_hourly_traffic("Origin, SG", "Dest, SG", API_KEY)
-    assert len(result) == 24
-    assert set(result.keys()) == set(range(24))
-    assert route.call_count == 24
+    assert len(result) == 19
+    assert set(result.keys()) == set(range(5, 24))
+    assert route.call_count == 19
     # Each value is the raw routes list from the API
-    assert result[0] == DIRECTIONS_OK["routes"]
+    assert result[5] == DIRECTIONS_OK["routes"]
 
 
 @respx.mock
@@ -76,7 +76,7 @@ async def test_fetch_hourly_transit_skips_no_service_hours():
         return_value=httpx.Response(200, json={"routes": [no_service_route]})
     )
     result = await maps.fetch_all_hourly_traffic("O, SG", "D, SG", API_KEY, mode="transit")
-    assert len(result) == 24
+    assert len(result) == 19
     assert all(routes == [] for routes in result.values())
 
 

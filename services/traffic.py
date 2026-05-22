@@ -40,7 +40,7 @@ def shape_routes(
         leg = route["legs"][0]
 
         hourly_points: list[HourlyDataPoint] = []
-        for hour in range(24):
+        for hour in range(5, 24):
             routes_at_hour = hourly_data.get(hour, [])
             if i < len(routes_at_hour):
                 hour_leg = routes_at_hour[i]["legs"][0]

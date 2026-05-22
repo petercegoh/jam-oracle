@@ -15,10 +15,10 @@ def test_shape_routes_basic():
     assert r.distance == "5 km"
     assert r.duration_current == "14 mins"
     assert r.duration_typical == "10 mins"
-    assert len(r.hourly_traffic) == 24
-    assert r.hourly_traffic[0].hour == "00:00"
+    assert len(r.hourly_traffic) == 19
+    assert r.hourly_traffic[0].hour == "05:00"
     assert r.hourly_traffic[0].duration_minutes == 14.0   # 840s / 60
-    assert r.hourly_traffic[8].hour == "08:00"
+    assert r.hourly_traffic[3].hour == "08:00"
 
 
 def test_shape_routes_fallback_to_duration():
@@ -46,8 +46,8 @@ def test_shape_routes_route_missing_at_hour():
         hourly[h] = [DIRECTIONS_ROUTE] if h == 5 else [DIRECTIONS_ROUTE, DIRECTIONS_ROUTE]
 
     results = traffic.shape_routes([DIRECTIONS_ROUTE, DIRECTIONS_ROUTE], hourly)
-    assert len(results[0].hourly_traffic) == 24          # route 0 always present
-    assert len(results[1].hourly_traffic) == 23          # route 1 missing hour 5
+    assert len(results[0].hourly_traffic) == 19          # route 0 always present (hours 5–23)
+    assert len(results[1].hourly_traffic) == 18          # route 1 missing hour 5
     hours_in_route_1 = [pt.hour for pt in results[1].hourly_traffic]
     assert "05:00" not in hours_in_route_1
 
@@ -62,8 +62,8 @@ def test_shape_transit_routes_basic():
     assert r.distance == "8 km"
     assert r.duration_current == "25 mins"
     assert r.duration_typical == "25 mins"
-    assert len(r.hourly_traffic) == 24
-    assert r.hourly_traffic[0].duration_minutes == 25.0   # 1500s / 60
+    assert len(r.hourly_traffic) == 19
+    assert r.hourly_traffic[0].duration_minutes == 25.0   # 1500s / 60, starts at 05:00
     assert r.transit_legs is not None
     assert len(r.transit_legs) == 2
     assert r.transfers == 1
@@ -103,14 +103,14 @@ def test_shape_transit_drops_duration_outliers():
             "steps": [],
         }]
     }
-    hourly = {h: [normal_route] for h in range(2, 24)}  # hours 2–23: 35 min each
-    hourly[1] = [outlier_route]                          # hour 1: 269 min (outlier)
+    hourly = {h: [normal_route] for h in range(5, 24)}  # hours 5–23: 35 min each
+    hourly[22] = [outlier_route]                         # hour 22: 269 min (outlier)
 
     results = traffic.shape_routes([normal_route], hourly, mode="transit")
     hours_present = [p.hour for p in results[0].hourly_traffic]
-    assert "01:00" not in hours_present          # outlier dropped
+    assert "22:00" not in hours_present          # outlier dropped
     assert "08:00" in hours_present              # normal hours kept
-    assert len(results[0].hourly_traffic) == 22  # 23 hours minus the outlier
+    assert len(results[0].hourly_traffic) == 18  # 19 hours minus the outlier
 
 
 def test_shape_transit_no_transit_steps():
