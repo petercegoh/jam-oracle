@@ -47,19 +47,19 @@ async def get_routes(query: RouteQuery):
     if not dest_valid:
         raise HTTPException(status_code=422, detail=f"Could not resolve destination: {query.destination}")
 
-    cache_key = (origin, destination)
+    cache_key = (origin, destination, query.mode)
     if cache_key in _cache:
         return _cache[cache_key]
 
     current_routes, hourly_data = await asyncio.gather(
-        maps.fetch_current_routes(origin, destination, GOOGLE_MAPS_API_KEY),
-        maps.fetch_all_hourly_traffic(origin, destination, GOOGLE_MAPS_API_KEY),
+        maps.fetch_current_routes(origin, destination, GOOGLE_MAPS_API_KEY, query.mode),
+        maps.fetch_all_hourly_traffic(origin, destination, GOOGLE_MAPS_API_KEY, query.mode),
     )
 
     if not current_routes:
         raise HTTPException(status_code=404, detail="No routes found between these locations")
 
-    routes = traffic.shape_routes(current_routes, hourly_data)
+    routes = traffic.shape_routes(current_routes, hourly_data, query.mode)
     response = RoutesResponse(origin=origin, destination=destination, routes=routes)
 
     _cache[cache_key] = response

@@ -1,5 +1,5 @@
 from services import traffic
-from tests.conftest import DIRECTIONS_ROUTE, DIRECTIONS_ROUTE_NO_TRAFFIC
+from tests.conftest import DIRECTIONS_ROUTE, DIRECTIONS_ROUTE_NO_TRAFFIC, TRANSIT_ROUTE
 
 
 def _hourly(route, hours=range(24)):
@@ -50,3 +50,57 @@ def test_shape_routes_route_missing_at_hour():
     assert len(results[1].hourly_traffic) == 23          # route 1 missing hour 5
     hours_in_route_1 = [pt.hour for pt in results[1].hourly_traffic]
     assert "05:00" not in hours_in_route_1
+
+
+def test_shape_transit_routes_basic():
+    """Transit mode: uses duration (not duration_in_traffic) and extracts transit legs."""
+    hourly = {h: [TRANSIT_ROUTE] for h in range(24)}
+    results = traffic.shape_routes([TRANSIT_ROUTE], hourly, mode="transit")
+    assert len(results) == 1
+    r = results[0]
+    assert r.summary == "NEL → 65"
+    assert r.distance == "8 km"
+    assert r.duration_current == "25 mins"
+    assert r.duration_typical == "25 mins"
+    assert len(r.hourly_traffic) == 24
+    assert r.hourly_traffic[0].duration_minutes == 25.0   # 1500s / 60
+    assert r.transit_legs is not None
+    assert len(r.transit_legs) == 2
+    assert r.transfers == 1
+
+
+def test_shape_transit_legs_fields():
+    """Transit legs are extracted with correct field values."""
+    results = traffic.shape_routes([TRANSIT_ROUTE], {}, mode="transit")
+    r = results[0]
+    nel = r.transit_legs[0]
+    assert nel.line_name == "North East Line"
+    assert nel.short_name == "NEL"
+    assert nel.vehicle_type == "SUBWAY"
+    assert nel.num_stops == 4
+    assert nel.departure_stop == "Dhoby Ghaut"
+    assert nel.arrival_stop == "Outram Park"
+
+    bus = r.transit_legs[1]
+    assert bus.short_name == "65"
+    assert bus.vehicle_type == "BUS"
+    assert r.transfers == 1   # two transit legs = one transfer
+
+
+def test_shape_transit_no_transit_steps():
+    """Route with only walking steps produces empty transit_legs and summary 'Transit'."""
+    walking_only = {
+        "legs": [
+            {
+                "distance": {"text": "1 km", "value": 1000},
+                "duration": {"text": "12 mins", "value": 720},
+                "steps": [{"travel_mode": "WALKING"}, {"travel_mode": "WALKING"}],
+            }
+        ],
+        "summary": "",
+    }
+    results = traffic.shape_routes([walking_only], {}, mode="transit")
+    r = results[0]
+    assert r.summary == "Transit"
+    assert r.transit_legs == []
+    assert r.transfers == 0

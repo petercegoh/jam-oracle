@@ -46,6 +46,47 @@ DIRECTIONS_ROUTE_NO_TRAFFIC = {
 DIRECTIONS_OK = {"routes": [DIRECTIONS_ROUTE]}
 DIRECTIONS_EMPTY = {"routes": []}
 
+TRANSIT_ROUTE = {
+    "legs": [
+        {
+            "distance": {"text": "8 km", "value": 8000},
+            "duration": {"text": "25 mins", "value": 1500},
+            "steps": [
+                {"travel_mode": "WALKING"},
+                {
+                    "travel_mode": "TRANSIT",
+                    "transit_details": {
+                        "line": {
+                            "name": "North East Line",
+                            "short_name": "NEL",
+                            "vehicle": {"type": "SUBWAY", "name": "Subway"},
+                        },
+                        "num_stops": 4,
+                        "departure_stop": {"name": "Dhoby Ghaut"},
+                        "arrival_stop": {"name": "Outram Park"},
+                    },
+                },
+                {"travel_mode": "WALKING"},
+                {
+                    "travel_mode": "TRANSIT",
+                    "transit_details": {
+                        "line": {
+                            "name": "Bus Service 65",
+                            "short_name": "65",
+                            "vehicle": {"type": "BUS", "name": "Bus"},
+                        },
+                        "num_stops": 3,
+                        "departure_stop": {"name": "Outram Park"},
+                        "arrival_stop": {"name": "Marina Bay"},
+                    },
+                },
+                {"travel_mode": "WALKING"},
+            ],
+        }
+    ],
+    "summary": "",
+}
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
