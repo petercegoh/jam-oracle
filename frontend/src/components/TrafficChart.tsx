@@ -26,15 +26,24 @@ const ALL_HOURS = Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart
 export default function TrafficChart({ routes }: Props) {
   const datasets = routes.map((route, i) => {
     const byHour = new Map(route.hourly_traffic.map((p) => [p.hour, p.duration_minutes]));
+    const data = ALL_HOURS.map((h) => byHour.get(h) ?? null);
+    const pointRadius = data.map((v, idx) => {
+      if (v === null) return 0;
+      const prevNull = idx === 0 || data[idx - 1] === null;
+      const nextNull = idx === data.length - 1 || data[idx + 1] === null;
+      return prevNull && nextNull ? 5 : 0;
+    });
     return {
       label: `Route ${route.index + 1} (${route.summary})`,
-      data: ALL_HOURS.map((h) => byHour.get(h) ?? null),
+      data,
       borderColor: COLORS[i],
       backgroundColor: COLORS[i] + "20",
+      pointBackgroundColor: COLORS[i],
       tension: 0.4,
-      pointRadius: 0,
+      pointRadius,
+      pointHoverRadius: 6,
       borderWidth: 2,
-      spanGaps: false,
+      spanGaps: true,
     };
   });
 
