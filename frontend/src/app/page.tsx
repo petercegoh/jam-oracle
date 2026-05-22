@@ -109,9 +109,30 @@ export default function Page() {
           className="animate-fade-in mt-8 flex flex-col gap-6"
         >
           <div>
-            <p className="mb-3 text-sm text-gray-500">
-              {result.origin} → {result.destination}
-            </p>
+            <div className="mb-3 flex items-start justify-between gap-4">
+              <p className="text-sm text-gray-500">
+                {result.origin} → {result.destination}
+              </p>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                <a
+                  href={
+                    `https://www.google.com/maps/dir/?api=1` +
+                    `&origin=${encodeURIComponent(result.origin)}` +
+                    `&destination=${encodeURIComponent(result.destination)}` +
+                    `&travelmode=${mode}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+                >
+                  Open in Google Maps
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+                <p className="text-xs text-gray-400">Tip: set a departure time in Maps</p>
+              </div>
+            </div>
             <TrafficChart routes={result.routes} />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -121,16 +142,12 @@ export default function Page() {
                   key={route.index}
                   route={route}
                   color={COLORS[route.index]}
-                  origin={result.origin}
-                  destination={result.destination}
                 />
               ) : (
                 <RouteCard
                   key={route.index}
                   route={route}
                   color={COLORS[route.index]}
-                  origin={result.origin}
-                  destination={result.destination}
                 />
               )
             )}

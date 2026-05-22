@@ -3,8 +3,6 @@ import type { RouteResult, TransitLeg } from "@/types/api";
 interface Props {
   route: RouteResult;
   color: string;
-  origin: string;
-  destination: string;
 }
 
 const VEHICLE_STYLES: Record<string, { bg: string; text: string }> = {
@@ -33,13 +31,7 @@ function LegPill({ leg }: { leg: TransitLeg }) {
   );
 }
 
-export default function TransitCard({ route, color, origin, destination }: Props) {
-  const mapsUrl =
-    `https://www.google.com/maps/dir/?api=1` +
-    `&origin=${encodeURIComponent(origin)}` +
-    `&destination=${encodeURIComponent(destination)}` +
-    `&travelmode=transit`;
-
+export default function TransitCard({ route, color }: Props) {
   const legs = route.transit_legs ?? [];
 
   const best =
@@ -113,17 +105,6 @@ export default function TransitCard({ route, color, origin, destination }: Props
         </div>
       )}
 
-      <a
-        href={mapsUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-4 flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:border-blue-300 hover:text-blue-600"
-      >
-        Open in Google Maps
-        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
-      </a>
     </div>
   );
 }
