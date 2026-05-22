@@ -16,6 +16,7 @@ export async function fetchRoutes(
       origin,
       destination,
       mode,
+      now_hour: new Date().getHours(),
       ...(originPlaceId && { origin_place_id: originPlaceId }),
       ...(destinationPlaceId && { destination_place_id: destinationPlaceId }),
     }),

@@ -18,12 +18,14 @@ export async function POST(request: NextRequest) {
     origin,
     destination,
     mode = "driving",
+    now_hour,
     origin_place_id,
     destination_place_id,
   } = body as {
     origin: string;
     destination: string;
     mode?: string;
+    now_hour?: number;
     origin_place_id?: string;
     destination_place_id?: string;
   };
@@ -104,8 +106,7 @@ export async function POST(request: NextRequest) {
     mode,
   );
 
-  const now = new Date();
-  const nowHour = Math.max(5, Math.min(23, now.getHours()));
+  const nowHour = Math.max(5, Math.min(23, now_hour ?? new Date().getHours()));
   const routes = shapeRoutes(hourlyData, mode, nowHour);
 
   if (!routes.length) {
