@@ -5,6 +5,12 @@ import AddressInput from "./AddressInput";
 import { fetchRoutes } from "@/lib/api";
 import type { Mode, RoutesResponse, Suggestion } from "@/types/api";
 
+const PRESETS = [
+  { label: "Orchard Rd → Marina Bay", origin: "Orchard Road, Singapore", destination: "Marina Bay, Singapore" },
+  { label: "Dhoby Ghaut → Changi Airport", origin: "Dhoby Ghaut, Singapore", destination: "Changi Airport, Singapore" },
+  { label: "MacRitchie Reservoir → Singapore Zoo", origin: "MacRitchie Reservoir, Singapore", destination: "Singapore Zoo, Singapore" },
+];
+
 interface Props {
   mode: Mode;
   onResult: (data: RoutesResponse) => void;
@@ -19,20 +25,12 @@ export default function SearchForm({ mode, onResult, onError, onLoading }: Props
   const [destinationPlaceId, setDestinationPlaceId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!origin.trim() || !destination.trim() || submitting) return;
+  async function run(o: string, d: string, oId?: string, dId?: string) {
     setSubmitting(true);
     onLoading(true);
     onError("");
     try {
-      const data = await fetchRoutes(
-        origin,
-        destination,
-        mode,
-        originPlaceId ?? undefined,
-        destinationPlaceId ?? undefined,
-      );
+      const data = await fetchRoutes(o, d, mode, oId, dId);
       onResult(data);
     } catch (err) {
       onError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -40,6 +38,21 @@ export default function SearchForm({ mode, onResult, onError, onLoading }: Props
       setSubmitting(false);
       onLoading(false);
     }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!origin.trim() || !destination.trim() || submitting) return;
+    await run(origin, destination, originPlaceId ?? undefined, destinationPlaceId ?? undefined);
+  }
+
+  async function handlePreset(preset: typeof PRESETS[number]) {
+    if (submitting) return;
+    setOrigin(preset.origin);
+    setDestination(preset.destination);
+    setOriginPlaceId(null);
+    setDestinationPlaceId(null);
+    await run(preset.origin, preset.destination);
   }
 
   function handleOriginSelect(s: Suggestion) {
@@ -71,6 +84,20 @@ export default function SearchForm({ mode, onResult, onError, onLoading }: Props
           placeholder="e.g. Marina Bay Sands"
           disabled={submitting}
         />
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-gray-400">Try:</span>
+        {PRESETS.map((p) => (
+          <button
+            key={p.label}
+            type="button"
+            onClick={() => handlePreset(p)}
+            disabled={submitting}
+            className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-600 transition-colors hover:border-blue-300 hover:text-blue-600 disabled:opacity-50"
+          >
+            {p.label}
+          </button>
+        ))}
       </div>
       <button
         type="submit"
