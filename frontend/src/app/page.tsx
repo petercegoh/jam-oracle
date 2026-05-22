@@ -133,7 +133,7 @@ export default function Page() {
                 <p className="text-xs text-gray-400">Tip: set a departure time in Maps</p>
               </div>
             </div>
-            <TrafficChart routes={result.routes} />
+            <TrafficChart routes={result.routes} mode={mode} />
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {result.routes.map((route) =>

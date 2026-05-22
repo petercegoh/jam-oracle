@@ -19,11 +19,12 @@ const COLORS = ["#3B82F6", "#22C55E", "#EF4444", "#F59E0B", "#8B5CF6", "#EC4899"
 
 interface Props {
   routes: RouteResult[];
+  mode: "driving" | "transit";
 }
 
 const ALL_HOURS = Array.from({ length: 19 }, (_, i) => `${String(i + 5).padStart(2, "0")}:00`);
 
-export default function TrafficChart({ routes }: Props) {
+export default function TrafficChart({ routes, mode }: Props) {
   const datasets = routes.map((route, i) => {
     const byHour = new Map(route.hourly_traffic.map((p) => [p.hour, p.duration_minutes]));
     const data = ALL_HOURS.map((h) => byHour.get(h) ?? null);
@@ -43,7 +44,7 @@ export default function TrafficChart({ routes }: Props) {
       pointRadius,
       pointHoverRadius: 6,
       borderWidth: 2,
-      spanGaps: true,
+      spanGaps: mode === "driving",
     };
   });
 
