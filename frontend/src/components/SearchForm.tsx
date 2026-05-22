@@ -60,7 +60,7 @@ export default function SearchForm({ mode, onResult, onError, onLoading }: Props
           value={origin}
           onChange={(v) => { setOrigin(v); setOriginPlaceId(null); }}
           onSelect={handleOriginSelect}
-          placeholder="e.g. Orchard MRT, Singapore"
+          placeholder="e.g. Orchard MRT"
           disabled={submitting}
         />
         <AddressInput
@@ -68,7 +68,7 @@ export default function SearchForm({ mode, onResult, onError, onLoading }: Props
           value={destination}
           onChange={(v) => { setDestination(v); setDestinationPlaceId(null); }}
           onSelect={handleDestinationSelect}
-          placeholder="e.g. Vivocity"
+          placeholder="e.g. Marina Bay Sands"
           disabled={submitting}
         />
       </div>

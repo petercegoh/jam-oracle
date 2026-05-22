@@ -48,7 +48,7 @@ async def test_suggest_address_excludes_types_geocode_restriction():
     await maps.suggest_address("Orchard", API_KEY)
     called_params = dict(route.calls[0].request.url.params)
     assert "types" not in called_params
-    assert called_params.get("components") == "country:sg"
+    assert "components" not in called_params
 
 
 @respx.mock

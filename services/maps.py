@@ -27,7 +27,6 @@ async def suggest_address(query: str, api_key: str) -> list[dict]:
             params={
                 "input": query,
                 "key": api_key,
-                "components": "country:sg",
                 "language": "en",
             },
         )
