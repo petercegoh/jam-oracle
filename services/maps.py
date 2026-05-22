@@ -20,15 +20,23 @@ async def validate_address(address: str, api_key: str) -> tuple[bool, str | None
     return False, None
 
 
-async def suggest_address(query: str, api_key: str) -> list[str]:
+async def suggest_address(query: str, api_key: str) -> list[dict]:
     async with httpx.AsyncClient() as client:
         resp = await client.get(
             PLACES_URL,
-            params={"input": query, "key": api_key, "types": "geocode"},
+            params={
+                "input": query,
+                "key": api_key,
+                "components": "country:sg",
+                "language": "en",
+            },
         )
     data = resp.json()
     if data.get("status") == "OK" and data.get("predictions"):
-        return [p["description"] for p in data["predictions"][:3]]
+        return [
+            {"description": p["description"], "place_id": p["place_id"]}
+            for p in data["predictions"][:5]
+        ]
     return []
 
 

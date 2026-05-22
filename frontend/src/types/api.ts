@@ -1,5 +1,10 @@
 export type Mode = "driving" | "transit";
 
+export interface Suggestion {
+  description: string;
+  place_id: string;
+}
+
 export interface HourlyDataPoint {
   hour: string;
   duration_minutes: number;

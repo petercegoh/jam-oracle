@@ -5,10 +5,17 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel
 
 
+class Suggestion(BaseModel):
+    description: str
+    place_id: str
+
+
 class RouteQuery(BaseModel):
     origin: str
     destination: str
     mode: Literal["driving", "transit"] = "driving"
+    origin_place_id: Optional[str] = None
+    destination_place_id: Optional[str] = None
 
 
 class HourlyDataPoint(BaseModel):
@@ -43,4 +50,4 @@ class RoutesResponse(BaseModel):
 
 
 class SuggestResponse(BaseModel):
-    suggestions: list[str]
+    suggestions: list[Suggestion]

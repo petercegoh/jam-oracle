@@ -15,10 +15,12 @@ GEOCODE_FAIL = {"status": "ZERO_RESULTS", "results": []}
 PLACES_OK = {
     "status": "OK",
     "predictions": [
-        {"description": "Orchard Road, Singapore"},
-        {"description": "Orchard MRT, Singapore"},
-        {"description": "Orchard Boulevard, Singapore"},
-        {"description": "Orchard Turn, Singapore"},  # 4th — should be excluded
+        {"description": "Orchard Road, Singapore", "place_id": "ChIJplace1"},
+        {"description": "Orchard MRT, Singapore", "place_id": "ChIJplace2"},
+        {"description": "Orchard Boulevard, Singapore", "place_id": "ChIJplace3"},
+        {"description": "Orchard Towers, Singapore", "place_id": "ChIJplace4"},
+        {"description": "Orchard Central, Singapore", "place_id": "ChIJplace5"},
+        {"description": "Orchard Turn, Singapore", "place_id": "ChIJplace6"},  # 6th — excluded
     ],
 }
 PLACES_FAIL = {"status": "ZERO_RESULTS", "predictions": []}

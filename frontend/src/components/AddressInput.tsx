@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { fetchSuggestions } from "@/lib/api";
+import type { Suggestion } from "@/types/api";
 
 interface Props {
   label: string;
   value: string;
   onChange: (v: string) => void;
-  onSelect: (v: string) => void;
+  onSelect: (suggestion: Suggestion) => void;
   placeholder?: string;
   disabled?: boolean;
 }
@@ -20,7 +21,7 @@ export default function AddressInput({
   placeholder,
   disabled = false,
 }: Props) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [fetching, setFetching] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -39,7 +40,7 @@ export default function AddressInput({
     }, 300);
   }
 
-  function handleSelect(suggestion: string) {
+  function handleSelect(suggestion: Suggestion) {
     onSelect(suggestion);
     setSuggestions([]);
     setSelectedIndex(-1);
@@ -96,14 +97,14 @@ export default function AddressInput({
         <ul className="absolute top-full z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
           {suggestions.map((s, i) => (
             <li
-              key={s}
+              key={s.place_id}
               onMouseDown={() => handleSelect(s)}
               aria-selected={i === selectedIndex}
               className={`cursor-pointer px-3 py-2 text-sm ${
                 i === selectedIndex ? "bg-blue-50 text-blue-900" : "hover:bg-blue-50"
               }`}
             >
-              {s}
+              {s.description}
             </li>
           ))}
         </ul>

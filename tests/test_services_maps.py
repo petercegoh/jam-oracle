@@ -25,12 +25,13 @@ async def test_validate_address_invalid():
 
 
 @respx.mock
-async def test_suggest_address_returns_top_3():
+async def test_suggest_address_returns_top_5():
     respx.get(PLACES_URL).mock(return_value=httpx.Response(200, json=PLACES_OK))
     suggestions = await maps.suggest_address("Orchard", API_KEY)
-    assert len(suggestions) == 3
-    assert suggestions[0] == "Orchard Road, Singapore"
-    assert suggestions[2] == "Orchard Boulevard, Singapore"
+    assert len(suggestions) == 5
+    assert suggestions[0]["description"] == "Orchard Road, Singapore"
+    assert suggestions[0]["place_id"] == "ChIJplace1"
+    assert suggestions[4]["description"] == "Orchard Central, Singapore"
 
 
 @respx.mock
@@ -38,6 +39,16 @@ async def test_suggest_address_no_results():
     respx.get(PLACES_URL).mock(return_value=httpx.Response(200, json=PLACES_FAIL))
     suggestions = await maps.suggest_address("xyzzy", API_KEY)
     assert suggestions == []
+
+
+@respx.mock
+async def test_suggest_address_excludes_types_geocode_restriction():
+    """Request must NOT include types=geocode — establishments need to appear."""
+    route = respx.get(PLACES_URL).mock(return_value=httpx.Response(200, json=PLACES_OK))
+    await maps.suggest_address("Orchard", API_KEY)
+    called_params = dict(route.calls[0].request.url.params)
+    assert "types" not in called_params
+    assert called_params.get("components") == "country:sg"
 
 
 @respx.mock

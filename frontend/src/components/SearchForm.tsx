@@ -3,7 +3,7 @@
 import { useState } from "react";
 import AddressInput from "./AddressInput";
 import { fetchRoutes } from "@/lib/api";
-import type { Mode, RoutesResponse } from "@/types/api";
+import type { Mode, RoutesResponse, Suggestion } from "@/types/api";
 
 interface Props {
   mode: Mode;
@@ -15,6 +15,8 @@ interface Props {
 export default function SearchForm({ mode, onResult, onError, onLoading }: Props) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  const [originPlaceId, setOriginPlaceId] = useState<string | null>(null);
+  const [destinationPlaceId, setDestinationPlaceId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -24,7 +26,13 @@ export default function SearchForm({ mode, onResult, onError, onLoading }: Props
     onLoading(true);
     onError("");
     try {
-      const data = await fetchRoutes(origin, destination, mode);
+      const data = await fetchRoutes(
+        origin,
+        destination,
+        mode,
+        originPlaceId ?? undefined,
+        destinationPlaceId ?? undefined,
+      );
       onResult(data);
     } catch (err) {
       onError(err instanceof Error ? err.message : "An unexpected error occurred.");
@@ -34,23 +42,33 @@ export default function SearchForm({ mode, onResult, onError, onLoading }: Props
     }
   }
 
+  function handleOriginSelect(s: Suggestion) {
+    setOrigin(s.description);
+    setOriginPlaceId(s.place_id);
+  }
+
+  function handleDestinationSelect(s: Suggestion) {
+    setDestination(s.description);
+    setDestinationPlaceId(s.place_id);
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <AddressInput
           label="Origin"
           value={origin}
-          onChange={setOrigin}
-          onSelect={setOrigin}
-          placeholder="e.g. Orchard Road, Singapore"
+          onChange={(v) => { setOrigin(v); setOriginPlaceId(null); }}
+          onSelect={handleOriginSelect}
+          placeholder="e.g. Orchard MRT, Singapore"
           disabled={submitting}
         />
         <AddressInput
           label="Destination"
           value={destination}
-          onChange={setDestination}
-          onSelect={setDestination}
-          placeholder="e.g. Marina Bay Sands"
+          onChange={(v) => { setDestination(v); setDestinationPlaceId(null); }}
+          onSelect={handleDestinationSelect}
+          placeholder="e.g. Vivocity"
           disabled={submitting}
         />
       </div>

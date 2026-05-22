@@ -23,12 +23,18 @@ async def test_health(client):
 async def test_suggest_returns_suggestions(client, mocker):
     mocker.patch(
         "api.routes.maps.suggest_address",
-        return_value=["Orchard Road, SG", "Orchard MRT, SG", "Orchard Blvd, SG"],
+        return_value=[
+            {"description": "Orchard Road, SG", "place_id": "ChIJabc1"},
+            {"description": "Orchard MRT, SG", "place_id": "ChIJabc2"},
+            {"description": "Orchard Blvd, SG", "place_id": "ChIJabc3"},
+        ],
     )
     resp = await client.get("/api/suggest", params={"q": "orchard"})
     assert resp.status_code == 200
     body = resp.json()
-    assert body["suggestions"] == ["Orchard Road, SG", "Orchard MRT, SG", "Orchard Blvd, SG"]
+    assert len(body["suggestions"]) == 3
+    assert body["suggestions"][0]["description"] == "Orchard Road, SG"
+    assert body["suggestions"][0]["place_id"] == "ChIJabc1"
 
 
 async def test_suggest_empty_query_rejected(client):
@@ -116,6 +122,42 @@ async def test_routes_transit_success(client, mocker):
     assert route["transfers"] == 1
     assert route["transit_legs"][0]["vehicle_type"] == "SUBWAY"
     assert route["transit_legs"][1]["vehicle_type"] == "BUS"
+
+
+async def test_routes_place_id_skips_geocoding(client, mocker):
+    """When place_ids are supplied, validate_address must not be called."""
+    validate_mock = mocker.patch("api.routes.maps.validate_address")
+    mocker.patch("api.routes.maps.fetch_all_hourly_traffic", return_value=_HOURLY)
+
+    resp = await client.post("/api/routes", json={
+        "origin": "Vivocity",
+        "destination": "Marina Bay Sands",
+        "origin_place_id": "ChIJorigin123",
+        "destination_place_id": "ChIJdest456",
+    })
+    assert resp.status_code == 200
+    validate_mock.assert_not_called()
+    body = resp.json()
+    assert body["origin"] == "Vivocity"
+    assert body["destination"] == "Marina Bay Sands"
+
+
+async def test_routes_place_id_partial_geocoding(client, mocker):
+    """When only origin has a place_id, only destination is geocoded."""
+    validate_mock = mocker.patch(
+        "api.routes.maps.validate_address",
+        return_value=(True, DEST),
+    )
+    mocker.patch("api.routes.maps.fetch_all_hourly_traffic", return_value=_HOURLY)
+
+    resp = await client.post("/api/routes", json={
+        "origin": "Vivocity",
+        "destination": "mbs",
+        "origin_place_id": "ChIJorigin123",
+    })
+    assert resp.status_code == 200
+    assert validate_mock.call_count == 1
+    assert validate_mock.call_args[0][0] == "mbs"
 
 
 async def test_routes_transit_cache_separate_from_driving(client, mocker):
